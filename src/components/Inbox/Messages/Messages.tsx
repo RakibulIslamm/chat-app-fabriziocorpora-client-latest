@@ -119,11 +119,11 @@ const Messages = () => {
 		}
 	};
 
-	useEffect(() => {
+	/* useEffect(() => {
 		if (lastMessageRef?.current) {
 			lastMessageRef.current?.scrollIntoView();
 		}
-	}, [data?.data]);
+	}, [data?.data]); */
 
 	let content;
 
@@ -236,7 +236,11 @@ const Messages = () => {
 						{isMember
 							? conversation?.data &&
 							  !conversation?.data?.deleted && (
-									<MessageFooter reply={reply} setReply={setReply} />
+									<MessageFooter
+										reply={reply}
+										setReply={setReply}
+										lastMessageRef={lastMessageRef}
+									/>
 							  )
 							: !cLoading &&
 							  conversation?.data && (

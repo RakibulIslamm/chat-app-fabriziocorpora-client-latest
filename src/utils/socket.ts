@@ -6,7 +6,4 @@ const connectionOptions = {
 	transports: ["websocket"],
 };
 
-export const socket = io(
-	"https://chat-app-fabriziocorpora.onrender.com/",
-	connectionOptions
-);
+export const socket = io("http://localhost:5000/", connectionOptions);

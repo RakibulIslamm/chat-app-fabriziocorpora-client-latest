@@ -1,4 +1,4 @@
-import { ChangeEvent } from "react";
+import { ChangeEvent, RefObject } from "react";
 import { IoIosSend } from "react-icons/io";
 import { BsEmojiSmile } from "react-icons/bs";
 import { RiAttachment2 } from "react-icons/ri";
@@ -16,9 +16,10 @@ import { MessageInterface } from "../../../interfaces/message";
 type Props = {
 	reply: MessageInterface | null;
 	setReply: Dispatch<SetStateAction<MessageInterface | null>>;
+	lastMessageRef: RefObject<HTMLDivElement>;
 };
 
-const MessageFooter = ({ reply, setReply }: Props) => {
+const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 	const { theme } = useSelector((state: ReduxState) => state.theme);
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const [showEmojis, setShowEmojis] = useState(false);
@@ -75,6 +76,9 @@ const MessageFooter = ({ reply, setReply }: Props) => {
 			setBase64Img("");
 			setImgLink("");
 			await sendMessage(data);
+			if (lastMessageRef?.current) {
+				lastMessageRef.current?.scrollIntoView();
+			}
 			await updateConversation({ messageData: conversationData, id: id });
 		} catch (err) {
 			console.log(err);

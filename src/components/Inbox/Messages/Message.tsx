@@ -12,6 +12,10 @@ import { useGetSingleConversationQuery } from "../../../lib/redux/slices/convers
 import { useParams } from "react-router-dom";
 import { socket } from "../../../utils/socket";
 import { useDeleteMessageMutation } from "../../../lib/redux/slices/message/messageApi";
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
+import "yet-another-react-lightbox/plugins/captions.css";
+import { Captions } from "yet-another-react-lightbox/plugins";
 
 type Props = {
 	message: MessageInterface;
@@ -20,6 +24,7 @@ type Props = {
 
 const Message = ({ message, setReply }: Props) => {
 	const [option, setOption] = useState(false);
+	const [isLightBoxOpen, setIsLightBoxOpen] = useState(false);
 
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const { fontSize } = useSelector((state: ReduxState) => state.theme);
@@ -95,6 +100,11 @@ const Message = ({ message, setReply }: Props) => {
 								{message?.replyTo &&
 									(message.replyTo.img ? (
 										<p
+											onClick={() => {
+												document
+													.getElementById(message?.replyTo?._id || "")
+													?.scrollIntoView();
+											}}
 											style={{ background: `${me ? secondary : replyBg}` }}
 											className="px-4 pt-2 pb-7 bg-slate-400 break-words relative top-5 z-0 rounded-t-lg dark:text-white text-sm font-light shadow-xl"
 										>
@@ -106,6 +116,11 @@ const Message = ({ message, setReply }: Props) => {
 										</p>
 									) : (
 										<p
+											onClick={() => {
+												document
+													.getElementById(message?.replyTo?._id || "")
+													?.scrollIntoView();
+											}}
 											style={{ background: `${me ? secondary : replyBg}` }}
 											className="px-4 pt-2 pb-7 bg-slate-400 break-words relative top-5 z-0 rounded-t-lg dark:text-white text-sm font-light shadow-xl"
 										>
@@ -114,11 +129,30 @@ const Message = ({ message, setReply }: Props) => {
 									))}
 								{message.img && message.message && (
 									<>
-										<img
-											src={message.img}
-											alt=""
-											className="w-[300px] rounded-t-lg sm:w-full"
-										/>
+										<>
+											<img
+												onClick={() => setIsLightBoxOpen(true)}
+												id={message?._id || ""}
+												src={message.img}
+												alt=""
+												className="w-[300px] rounded-t-lg sm:w-full cursor-pointer"
+											/>
+											<Lightbox
+												plugins={[Captions]}
+												open={isLightBoxOpen}
+												close={() => setIsLightBoxOpen(false)}
+												slides={[
+													{
+														src: message.img,
+														description: message.message || "",
+													},
+												]}
+												captions={{
+													descriptionTextAlign: "center",
+													descriptionMaxLines: 2,
+												}}
+											/>
+										</>
 										<p
 											style={{
 												background: `${me ? main : secondary}`,
@@ -136,6 +170,7 @@ const Message = ({ message, setReply }: Props) => {
 								)}
 								{!message.img && message.message && (
 									<p
+										id={message?._id || ""}
 										style={{
 											background: `${me ? main : secondary}`,
 											fontSize: fontSize,
@@ -150,11 +185,19 @@ const Message = ({ message, setReply }: Props) => {
 									</p>
 								)}
 								{message.img && !message.message && (
-									<img
-										src={message.img}
-										alt=""
-										className="w-[300px] rounded-lg sm:w-full"
-									/>
+									<>
+										<img
+											onClick={() => setIsLightBoxOpen(true)}
+											src={message.img}
+											alt=""
+											className="w-[300px] rounded-lg sm:w-full cursor-pointer"
+										/>
+										<Lightbox
+											open={isLightBoxOpen}
+											close={() => setIsLightBoxOpen(false)}
+											slides={[{ src: message.img }]}
+										/>
+									</>
 								)}
 							</div>
 						)}
@@ -178,13 +221,13 @@ const Message = ({ message, setReply }: Props) => {
 										className={`transform ${!me && "-scale-x-[1]"} text-2xl`}
 									/>
 								</button>
-								<div>
+								<div className="relative flex items-center">
 									<button onClick={() => setOption(!option)}>
 										<BsThreeDotsVertical
 											className={`transform ${!me && "-scale-x-[1]"} text-2xl`}
 										/>
 									</button>
-									{option && (
+									{
 										<div
 											id="msg-option"
 											style={{
@@ -193,8 +236,12 @@ const Message = ({ message, setReply }: Props) => {
 												border: `1px solid ${border}`,
 											}}
 											className={`absolute bg-white flex justify-center items-center flex-col text-sm ${
-												me ? "left-4 bottom-12" : "left-14 bottom-14"
-											} backdrop-blur-[3px] rounded-lg shadow z-50`}
+												me ? "-left-20 sm:left-2" : "-right-20 sm:right-2"
+											} backdrop-blur-[3px] rounded-lg shadow z-50 overflow-hidden ${
+												option
+													? "bottom-2 sm:bottom-10 visible opacity-100"
+													: "bottom-4 sm:bottom-14 invisible opacity-0"
+											} transition-all ease-in-out`}
 										>
 											<button
 												className="hover:bg-gray-200 px-3 py-2 block w-full rounded-lg text-gray-600"
@@ -212,7 +259,7 @@ const Message = ({ message, setReply }: Props) => {
 												</button>
 											)}
 										</div>
-									)}
+									}
 								</div>
 							</div>
 						)}

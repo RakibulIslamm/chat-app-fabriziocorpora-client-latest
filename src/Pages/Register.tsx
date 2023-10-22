@@ -41,16 +41,13 @@ const Register = () => {
 
 		try {
 			setLoading(true);
-			const res = await fetch(
-				"https://chat-app-fabriziocorpora.onrender.com/api/users/register",
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(data),
-				}
-			);
+			const res = await fetch("http://localhost:5000/api/users/register", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(data),
+			});
 
 			const res_data = await res.json();
 			if (!res_data.success) {
