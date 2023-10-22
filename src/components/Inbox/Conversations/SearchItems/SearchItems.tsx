@@ -1,5 +1,5 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
-import { useState, Dispatch, SetStateAction } from "react";
+import { useState, Dispatch, SetStateAction, RefObject } from "react";
 import User from "./User";
 import { AiOutlineUser, AiOutlineUsergroupAdd } from "react-icons/ai";
 import useColorScheme from "../../../../Hooks/useColorScheme";
@@ -15,11 +15,13 @@ import Group from "./Group";
 type Props = {
 	searchText: string | null;
 	setSearchText: Dispatch<SetStateAction<string>>;
+	searchRef: RefObject<HTMLInputElement>;
 };
 
-const SearchItems = ({ searchText, setSearchText }: Props) => {
+const SearchItems = ({ searchText, setSearchText, searchRef }: Props) => {
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const [searchFor, setSearchFor] = useState("user");
+
 	const { textColor, main } = useColorScheme();
 
 	const {
@@ -50,7 +52,7 @@ const SearchItems = ({ searchText, setSearchText }: Props) => {
 					<User
 						key={conversation._id}
 						conversation={conversation}
-						setSearchText={setSearchText}
+						searchRef={searchRef}
 					/>
 				)
 			);

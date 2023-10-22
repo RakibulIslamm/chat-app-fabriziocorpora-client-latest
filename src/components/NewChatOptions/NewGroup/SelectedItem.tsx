@@ -11,7 +11,9 @@ const SelectedItem = ({ user }: Props) => {
 				style={{ background: user.color }}
 				className="w-[35px] h-[35px] rounded-full flex justify-center items-center relative"
 			>
-				<p className="text-2xl font-semibold text-white">{user?.name[0]}</p>
+				<p className="text-2xl font-semibold text-white">
+					{user?.name?.[0] || ""}
+				</p>
 			</div>
 			<div className="group-hover/menu:text-white leading-4">
 				<p className="text-[14px] line-clamp-1">{user?.name}</p>

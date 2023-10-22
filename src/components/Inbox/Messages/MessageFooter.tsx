@@ -67,7 +67,6 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 			lastMessage: input,
 			img: imgLink ? true : false,
 			timestamp: Date.now(),
-			sent: { timestamp: Date.now(), messageSent: true },
 		};
 
 		try {

@@ -25,9 +25,14 @@ import { useState, useEffect, useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { conversationOn } from "../../../lib/redux/slices/common/commonSlice";
 import { socket } from "../../../utils/socket";
+import Forward from "./Forward/Forward";
 
 const Messages = () => {
 	const [reply, setReply] = useState<MessageInterface | null>(null);
+	const [forwardOpen, setForwardOpen] = useState(false);
+	const [forwardMessage, setForwardMessage] = useState<MessageInterface | null>(
+		null
+	);
 	// const [skip, setSkip] = useState<number>(1);
 	const [hasMore, setHasMore] = useState<boolean>(true);
 	const lastMessageRef = useRef<HTMLDivElement | null>(null);
@@ -37,7 +42,13 @@ const Messages = () => {
 	const bg = tinycolor(secondary).setAlpha(0.8).toRgbString();
 	const { id } = useParams();
 
-	const { isLoading, isError, data, error } = useGetMessagesQuery({
+	const {
+		isLoading,
+		isFetching: messagesFetching,
+		isError,
+		data,
+		error,
+	} = useGetMessagesQuery({
 		conversationId: id,
 		userId: user?._id,
 	});
@@ -66,6 +77,8 @@ const Messages = () => {
 		if (data?.data?.length >= data?.count) {
 			setHasMore(false);
 			return;
+		} else {
+			setHasMore(true);
 		}
 	}, [data]);
 
@@ -127,7 +140,7 @@ const Messages = () => {
 
 	let content;
 
-	if (isLoading) {
+	if (isLoading || messagesFetching) {
 		content = (
 			<div className="text-center py-5 text-lg text-gray-400">Loading...</div>
 		);
@@ -146,14 +159,20 @@ const Messages = () => {
 		);
 	} else if (!isLoading && !isError && data?.data?.length) {
 		content = data?.data?.map((message: MessageInterface) => (
-			<Message key={message._id} message={message} setReply={setReply} />
+			<Message
+				key={message._id}
+				message={message}
+				setReply={setReply}
+				setForwardMessage={setForwardMessage}
+				setForwardOpen={setForwardOpen}
+			/>
 		));
 	}
 
 	return (
 		<>
 			{!error && (
-				<div className="flex flex-col justify-between w-full h-full">
+				<div className="flex flex-col justify-between w-full h-full relative">
 					{/* Theme color */}
 					<div
 						style={{
@@ -187,7 +206,7 @@ const Messages = () => {
 								next={fetchMoreData}
 								hasMore={hasMore}
 								loader={
-									!isLoading ? (
+									!isLoading && !messagesFetching ? (
 										<h4 className="text-xl font-semibold py-2 text-gray-400 px-[40px] text-center">
 											Loading...
 										</h4>
@@ -252,6 +271,14 @@ const Messages = () => {
 										{joining ? "Joining..." : "Join"}
 									</button>
 							  )}
+					</div>
+
+					<div
+						className={`w-full h-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${
+							forwardOpen ? "visible z-50" : "invisible"
+						}`}
+					>
+						<Forward setForwardOpen={setForwardOpen} message={forwardMessage} />
 					</div>
 				</div>
 			)}

@@ -6,14 +6,15 @@ import {
 	IsSearchFocus,
 	openMenu,
 } from "../../../lib/redux/slices/common/commonSlice";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, RefObject, SetStateAction } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 type Prop = {
 	setSearchText: Dispatch<SetStateAction<string>>;
+	searchRef: RefObject<HTMLInputElement>;
 };
 
-const ConversationHeader = ({ setSearchText }: Prop) => {
+const ConversationHeader = ({ setSearchText, searchRef }: Prop) => {
 	const { menuOpen, searchFocus } = useSelector(
 		(state: ReduxState) => state.common
 	);
@@ -33,6 +34,7 @@ const ConversationHeader = ({ setSearchText }: Prop) => {
 			<div className="relative w-full">
 				<input
 					className="border border-[#B4B4B4] dark:border-[#7e7e7e] rounded w-full py-2 pr-3 pl-[40px] text-gray-700 leading-tight focus:outline-none focus:shadow text-[17px] placeholder:text-[#B4B4B4] dark:bg-transparent dark:text-white"
+					ref={searchRef}
 					type="text"
 					placeholder="Search..."
 					// value={searchText}

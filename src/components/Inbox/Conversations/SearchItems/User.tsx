@@ -6,15 +6,15 @@ import {
 	useSelector,
 } from "../../../../lib/redux/store";
 import { conversationOn } from "../../../../lib/redux/slices/common/commonSlice";
-import { Dispatch, SetStateAction } from "react";
+import { RefObject } from "react";
 import moment from "moment";
 
 type Props = {
 	conversation: ConversationInterface;
-	setSearchText: Dispatch<SetStateAction<string>>;
+	searchRef: RefObject<HTMLInputElement>;
 };
 
-const User = ({ conversation, setSearchText }: Props) => {
+const User = ({ conversation, searchRef }: Props) => {
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const participant = conversation?.participants?.find(
 		(p) => p._id !== user?._id
@@ -26,7 +26,7 @@ const User = ({ conversation, setSearchText }: Props) => {
 			className="text-sm font-medium flex items-center gap-2 hover:bg-[#00000028] p-3 rounded-md"
 			onClick={() => {
 				dispatch(conversationOn());
-				setSearchText("");
+				searchRef!.current!.value = "";
 			}}
 		>
 			<div

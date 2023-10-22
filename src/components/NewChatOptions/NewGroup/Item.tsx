@@ -3,15 +3,17 @@ import { UserInterface } from "../../../interfaces/user";
 
 type Props = {
 	item: UserInterface;
+	selectedUsers: UserInterface[];
 	handleSelectedUsers: (user: UserInterface) => void;
 };
 
-const Item = ({ handleSelectedUsers, item }: Props) => {
+const Item = ({ handleSelectedUsers, item, selectedUsers }: Props) => {
 	return (
 		<div className="flex items-center w-full">
 			<input
 				id={item._id}
 				type="checkbox"
+				checked={selectedUsers.some((user) => user._id === item._id)}
 				className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
 				onChange={() => handleSelectedUsers(item)}
 			/>

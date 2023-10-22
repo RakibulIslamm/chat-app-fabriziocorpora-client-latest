@@ -60,8 +60,8 @@ const NewGroup = () => {
 			timestamp: Date.now(),
 		};
 		try {
-			const data = await createConversation(conversation).unwrap();
-			navigate(`messages/${data?.data?._id}`);
+			const newConversation = await createConversation(conversation).unwrap();
+			navigate(`messages/${newConversation?.data?._id}`);
 			dispatch(conversationOn());
 		} catch (err) {
 			console.log(err);
@@ -84,6 +84,7 @@ const NewGroup = () => {
 			<Item
 				key={user._id}
 				item={user}
+				selectedUsers={selectedUsers}
 				handleSelectedUsers={handleSelectedUsers}
 			/>
 		));

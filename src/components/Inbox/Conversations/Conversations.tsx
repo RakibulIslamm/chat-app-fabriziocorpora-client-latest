@@ -20,11 +20,12 @@ import {
 	useGetMoreConversationsQuery,
 } from "../../../lib/redux/slices/conversation/conversationApi";
 import { ConversationInterface } from "../../../interfaces/conversation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 const Conversations = () => {
 	const [searchText, setSearchText] = useState<string>("");
+	const searchRef = useRef(null);
 	// const [skip, setSkip] = useState<number>(1);
 	const [hasMore, setHasMore] = useState<boolean>(true);
 	const { menuOpen, searchFocus, newChatOptions } = useSelector(
@@ -96,7 +97,7 @@ const Conversations = () => {
 
 	return (
 		<div className="w-full h-full relative group/new-chat">
-			<ConversationHeader setSearchText={setSearchText} />
+			<ConversationHeader setSearchText={setSearchText} searchRef={searchRef} />
 			{!searchFocus ? (
 				<div
 					className={`pb-4 space-y-1 ${
@@ -137,7 +138,11 @@ const Conversations = () => {
 					</InfiniteScroll>
 				</div>
 			) : (
-				<SearchItems searchText={searchText} setSearchText={setSearchText} />
+				<SearchItems
+					searchText={searchText}
+					setSearchText={setSearchText}
+					searchRef={searchRef}
+				/>
 			)}
 
 			{!menuOpen && !searchFocus && (

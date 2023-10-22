@@ -20,9 +20,16 @@ import { Captions } from "yet-another-react-lightbox/plugins";
 type Props = {
 	message: MessageInterface;
 	setReply: Dispatch<SetStateAction<MessageInterface | null>>;
+	setForwardMessage: Dispatch<SetStateAction<MessageInterface | null>>;
+	setForwardOpen: Dispatch<SetStateAction<boolean>>;
 };
 
-const Message = ({ message, setReply }: Props) => {
+const Message = ({
+	message,
+	setReply,
+	setForwardMessage,
+	setForwardOpen,
+}: Props) => {
 	const [option, setOption] = useState(false);
 	const [isLightBoxOpen, setIsLightBoxOpen] = useState(false);
 
@@ -244,8 +251,12 @@ const Message = ({ message, setReply }: Props) => {
 											} transition-all ease-in-out`}
 										>
 											<button
+												onClick={() => {
+													setForwardMessage(message);
+													setForwardOpen(true);
+												}}
 												className="hover:bg-gray-200 px-3 py-2 block w-full rounded-lg text-gray-600"
-												title="Forward this message to others"
+												title="Forward"
 											>
 												Forward
 											</button>
