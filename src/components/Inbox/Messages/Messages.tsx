@@ -201,8 +201,9 @@ const Messages = () => {
 							</div>
 						) : (
 							<InfiniteScroll
+								style={{ overflow: "hidden" }}
 								className="flex flex-col-reverse gap-4 pt-[60px]"
-								dataLength={data?.data?.length || 8}
+								dataLength={data?.data?.length || 16}
 								next={fetchMoreData}
 								hasMore={hasMore}
 								loader={

@@ -1,4 +1,4 @@
-import { ChangeEvent, RefObject } from "react";
+import { ChangeEvent, RefObject, useEffect, useRef } from "react";
 import { IoIosSend } from "react-icons/io";
 import { BsEmojiSmile } from "react-icons/bs";
 import { RiAttachment2 } from "react-icons/ri";
@@ -24,6 +24,7 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const [showEmojis, setShowEmojis] = useState(false);
 	const [input, setInput] = useState("");
+	const emojiPickerRef = useRef<HTMLDivElement | null>(null);
 	const { id } = useParams();
 
 	const [sendMessage, { isLoading: sending }] = useSendMessageMutation();
@@ -38,6 +39,23 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 		setUploading,
 		uploading,
 	} = useGetCompressedImage();
+
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				emojiPickerRef.current &&
+				!emojiPickerRef.current.contains(event.target as Node)
+			) {
+				setShowEmojis(false);
+			}
+		};
+
+		window.addEventListener("click", handleClickOutside);
+
+		return () => {
+			window.removeEventListener("click", handleClickOutside);
+		};
+	}, []);
 
 	const handleSendImage = async (e: ChangeEvent<HTMLInputElement>) => {
 		const file = e.target?.files?.[0];
@@ -74,6 +92,7 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 			setReply(null);
 			setBase64Img("");
 			setImgLink("");
+			setShowEmojis(false);
 			await sendMessage(data);
 			if (lastMessageRef?.current) {
 				lastMessageRef.current?.scrollIntoView();
@@ -117,12 +136,13 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 					)}
 				</div>
 			)}
-			<div className="w-full relative">
+			<div className="w-full relative" ref={emojiPickerRef}>
 				<input
 					className={`w-full py-3 rounded-xl rounded-br-none px-[50px] border border-[#b4b4b4] dark:border-[#b4b4b44b] outline-none bg-white dark:bg-opacity-10 dark:text-white`}
 					type="text"
 					placeholder="Message...."
 					value={input}
+					onClick={() => setShowEmojis(false)}
 					onChange={(e) => setInput(e.target.value)}
 				/>
 				<button

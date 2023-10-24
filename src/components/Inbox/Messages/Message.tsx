@@ -148,6 +148,10 @@ const Message = ({
 												plugins={[Captions]}
 												open={isLightBoxOpen}
 												close={() => setIsLightBoxOpen(false)}
+												render={{
+													buttonPrev: () => null,
+													buttonNext: () => null,
+												}}
 												slides={[
 													{
 														src: message.img,
@@ -169,7 +173,7 @@ const Message = ({
 												me
 													? " text-white rounded-br-none"
 													: "rounded-bl-none dark:text-gray-100"
-											} shadow-xl relative z-10`}
+											} shadow-xl relative`}
 										>
 											{message.message}
 										</p>
@@ -186,7 +190,7 @@ const Message = ({
 											me
 												? " text-white rounded-br-none"
 												: "rounded-bl-none dark:text-gray-100"
-										} shadow-xl relative z-10`}
+										} shadow-xl relative`}
 									>
 										{message.message}
 									</p>

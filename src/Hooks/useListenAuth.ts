@@ -13,7 +13,7 @@ const useListenAuth = () => {
 			try {
 				if (auth) {
 					const res = await fetch(
-						`http://localhost:5000/api/users/user?username=${auth.username}`
+						`https://chat-app-fabriziocorpora.onrender.com/api/users/user?username=${auth.username}`
 					);
 					const data = await res.json();
 					socket.emit("new_user", data.data._id);

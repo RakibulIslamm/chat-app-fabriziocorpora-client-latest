@@ -29,7 +29,7 @@ type CustomBaseQueryFn = BaseQueryFn<
 export const apiSlice = createApi({
 	reducerPath: "chat-application",
 	baseQuery: fetchBaseQuery({
-		baseUrl: "http://localhost:5000/api",
+		baseUrl: "https://chat-app-fabriziocorpora.onrender.com/api",
 	}) as CustomBaseQueryFn,
 	tagTypes: ["auth", "users", "conversations"],
 	endpoints: (_builder) => ({}),

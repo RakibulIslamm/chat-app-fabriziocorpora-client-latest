@@ -89,7 +89,7 @@ const MessageHeader = () => {
 				<BiDotsVerticalRounded className="text-[#4B4B4B] dark:text-white text-3xl" />
 			</button>
 			{conversationOptions && (
-				<div className=" absolute -bottom-[70px] right-4 z-50">
+				<div className="absolute -bottom-[70px] right-4 z-50">
 					<ConversationOptions conversation={data?.data} />
 				</div>
 			)}
