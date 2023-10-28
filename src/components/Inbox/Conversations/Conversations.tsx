@@ -1,7 +1,6 @@
 import { ReduxState, useDispatch, useSelector } from "../../../lib/redux/store";
 import Conversation from "./Conversation";
 import ConversationHeader from "./Header";
-import Menu from "./Menu";
 import { BsFillChatRightDotsFill } from "react-icons/bs";
 import { AiOutlineCloseCircle } from "react-icons/ai";
 import { BiSolidUser } from "react-icons/bi";
@@ -105,15 +104,6 @@ const Conversations = () => {
 					} w-full h-[calc(100%_-_75px)] scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200 scrollbar-thumb-rounded-full scrollbar-track-rounded-full relative`}
 					id="conversationContainer"
 				>
-					<div
-						className={`fixed top-18 left-12 md:right-0 md:px-4 sm:right-0 px-4 z-50 overflow-hidden ${
-							menuOpen
-								? "visible h-full transition-[height] ease-in-out duration-300"
-								: "invisible h-0"
-						}`}
-					>
-						<Menu />
-					</div>
 					<InfiniteScroll
 						dataLength={data?.data?.length || 8}
 						next={fetchMoreData}

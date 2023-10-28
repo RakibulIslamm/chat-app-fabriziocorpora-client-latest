@@ -14,6 +14,7 @@ import { socket } from "../../../utils/socket";
 const Menu = () => {
 	const { theme } = useSelector((state: ReduxState) => state.theme);
 	const { user } = useSelector((state: ReduxState) => state.user);
+	const { menuOpen } = useSelector((state: ReduxState) => state.common);
 	const dispatch = useDispatch();
 
 	const handleSetTheme = () => {
@@ -58,7 +59,11 @@ const Menu = () => {
 				color: textColor,
 				border: `1px solid ${border}`,
 			}}
-			className={`p-[25px] backdrop-blur-[3px] w-[300px] md:w-full sm:w-full space-y-3 rounded-lg shadow font-semibold`}
+			className={`p-[25px] backdrop-blur-[3px] w-[300px] md:w-full sm:w-full space-y-3 rounded-lg shadow font-semibold overflow-hidden ${
+				menuOpen
+					? "visible h-[170px] opacity-100 transition-all ease-in-out duration-300"
+					: "invisible h-0 opacity-0"
+			}`}
 			id="menu_container"
 		>
 			<button

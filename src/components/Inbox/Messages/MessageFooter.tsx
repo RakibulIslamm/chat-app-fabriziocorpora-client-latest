@@ -17,6 +17,7 @@ type Props = {
 	reply: MessageInterface | null;
 	setReply: Dispatch<SetStateAction<MessageInterface | null>>;
 	lastMessageRef: RefObject<HTMLDivElement>;
+	containerRef: RefObject<HTMLDivElement>;
 };
 
 const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
@@ -26,6 +27,8 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 	const [input, setInput] = useState("");
 	const emojiPickerRef = useRef<HTMLDivElement | null>(null);
 	const { id } = useParams();
+	const imgRef = useRef<HTMLInputElement | null>(null);
+	const inputRef = useRef<HTMLInputElement | null>(null);
 
 	const [sendMessage, { isLoading: sending }] = useSendMessageMutation();
 	const [updateConversation] = useUpdateConversationMutation();
@@ -69,7 +72,11 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 
 	const handleMessageSend = async (e: FormEvent) => {
 		e.preventDefault();
-		if (!input && !imgLink) return;
+		const s = input.replace(/[\s\r\n]+/g, "");
+		if (!s && !imgLink) {
+			inputRef!.current!.focus();
+			return;
+		}
 
 		const data = {
 			sender: { name: user?.name, id: user?._id },
@@ -88,19 +95,30 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 		};
 
 		try {
+			if (s) {
+				inputRef!.current!.focus();
+			}
 			setInput("");
 			setReply(null);
 			setBase64Img("");
 			setImgLink("");
+			inputRef!.current!.innerText = "";
 			setShowEmojis(false);
 			await sendMessage(data);
 			if (lastMessageRef?.current) {
-				lastMessageRef.current?.scrollIntoView();
+				// lastMessageRef!.current!.scrollIntoView();
+				lastMessageRef.current.scrollTop = lastMessageRef.current?.scrollHeight;
+				// containerRef!.current!.scrollIntoView();
 			}
 			await updateConversation({ messageData: conversationData, id: id });
 		} catch (err) {
 			console.log(err);
 		}
+	};
+
+	const handleContentChange = (e: ChangeEvent<HTMLParagraphElement>) => {
+		const newContent = e.target.innerText;
+		setInput(newContent);
 	};
 
 	return (
@@ -109,26 +127,26 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 			className="flex justify-between items-center gap-3 px-[55px] md:px-[20px] sm:px-[15px] w-full relative"
 		>
 			{base64Img && (
-				<div className=" absolute inline-block w-24 h-24 bottom-16 left-16">
-					<button
-						type="button"
+				<div className="absolute w-full bottom-16 bg-black bg-opacity-50 left-0 sm:p-4 px-16 py-4 backdrop-blur-sm">
+					<span
 						onClick={() => {
 							setBase64Img("");
 							setImgLink("");
+							imgRef!.current!.value = "";
 						}}
-						className="text-xl text-primary hover:text-red-500 absolute right-1 top-1"
+						className="text-xl text-white text-primary hover:text-red-500 absolute right-4 top-2 cursor-pointer"
 					>
 						<RxCrossCircled className="" />
-					</button>
+					</span>
 					<img
-						className="w-full h-full object-cover rounded"
+						className="w-24 h-24 object-cover rounded my-2"
 						src={base64Img}
 						alt=""
 					/>
 					{uploading && (
-						<div className="w-full h-full bg-primary bg-opacity-70 absolute top-0">
+						<div className="w-full h-full bg-primary bg-opacity-80 absolute top-0">
 							<p
-								className={`text-xs absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white`}
+								className={`text-md absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white`}
 							>
 								Uploading...
 							</p>
@@ -136,25 +154,35 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 					)}
 				</div>
 			)}
-			<div className="w-full relative" ref={emojiPickerRef}>
-				<input
-					className={`w-full py-3 rounded-xl rounded-br-none px-[50px] border border-[#b4b4b4] dark:border-[#b4b4b44b] outline-none bg-white dark:bg-opacity-10 dark:text-white`}
-					type="text"
-					placeholder="Message...."
-					value={input}
+			<div
+				className="w-[calc(100%_-_60px)] relative rounded-xl sm:rounded-lg rounded-br-none sm:rounded-br-none px-[55px] border border-[#b4b4b4] dark:border-[#b4b4b44b] outline-none bg-white dark:bg-opacity-10 dark:text-white"
+				ref={emojiPickerRef}
+			>
+				<p
+					contentEditable={true}
+					className={`w-full my-3 max-h-[80px] outline-none overflow-auto relative z-10 scrollbar-none`}
+					ref={inputRef}
+					onInput={handleContentChange}
 					onClick={() => setShowEmojis(false)}
-					onChange={(e) => setInput(e.target.value)}
-				/>
-				<button
-					type="button"
+				></p>
+				{!input && (
+					<span
+						className="absolute top-1/2 transform -translate-y-1/2 left-14 select-none z-0 text-gray-500"
+						contentEditable={false}
+					>
+						Message....
+					</span>
+				)}
+				<span
 					onClick={() => setShowEmojis(!showEmojis)}
-					className=" absolute top-1/2 transform -translate-y-1/2 left-4 text-2xl text-[#7e7e7e]"
+					className=" absolute top-1/2 transform -translate-y-1/2 left-4 text-2xl text-[#7e7e7e] cursor-pointer z-20"
 				>
 					<BsEmojiSmile />
-				</button>
-				<label className="absolute top-1/2 transform -translate-y-1/2 right-4 text-2xl text-[#7e7e7e] cursor-pointer">
+				</span>
+				<label className="absolute top-1/2 transform -translate-y-1/2 right-4 text-2xl text-[#7e7e7e] cursor-pointer z-20">
 					<RiAttachment2 />
 					<input
+						ref={imgRef}
 						onChange={handleSendImage}
 						className="w-0 h-0 absolute"
 						type="file"
@@ -171,17 +199,18 @@ const MessageFooter = ({ reply, setReply, lastMessageRef }: Props) => {
 							theme={theme === "dark" ? Theme.DARK : Theme.LIGHT}
 							onEmojiClick={(emojiData) => {
 								setInput((prevInput) => prevInput + emojiData.emoji);
+								inputRef!.current!.innerText += emojiData.emoji;
 							}}
 						/>
 					</div>
 				)}
 			</div>
 			<button
-				disabled={sending}
 				type="submit"
-				className="p-3 rounded-full bg-white border border-[#B4B4B4]"
+				className="w-[50px] h-[50px] rounded-full bg-white border border-[#B4B4B4] flex justify-center items-center"
+				disabled={sending}
 			>
-				<IoIosSend className="text-[#4B4B4B] text-3xl" />
+				<IoIosSend className="text-[#4B4B4B] text-3xl sm:text-2xl" />
 			</button>
 		</form>
 	);

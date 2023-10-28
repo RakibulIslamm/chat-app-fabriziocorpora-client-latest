@@ -16,6 +16,7 @@ import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import { Captions } from "yet-another-react-lightbox/plugins";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
 
 type Props = {
 	message: MessageInterface;
@@ -110,7 +111,7 @@ const Message = ({
 											onClick={() => {
 												document
 													.getElementById(message?.replyTo?._id || "")
-													?.scrollIntoView();
+													?.scrollIntoView(true);
 											}}
 											style={{ background: `${me ? secondary : replyBg}` }}
 											className="px-4 pt-2 pb-7 bg-slate-400 break-words relative top-5 z-0 rounded-t-lg dark:text-white text-sm font-light shadow-xl"
@@ -126,7 +127,7 @@ const Message = ({
 											onClick={() => {
 												document
 													.getElementById(message?.replyTo?._id || "")
-													?.scrollIntoView();
+													?.scrollIntoView(true);
 											}}
 											style={{ background: `${me ? secondary : replyBg}` }}
 											className="px-4 pt-2 pb-7 bg-slate-400 break-words relative top-5 z-0 rounded-t-lg dark:text-white text-sm font-light shadow-xl"
@@ -142,10 +143,10 @@ const Message = ({
 												id={message?._id || ""}
 												src={message.img}
 												alt=""
-												className="w-[300px] rounded-t-lg sm:w-full cursor-pointer"
+												className="w-[300px] rounded-t-lg sm:w-full cursor-pointer bg-black bg-opacity-50"
 											/>
 											<Lightbox
-												plugins={[Captions]}
+												plugins={[Captions, Zoom]}
 												open={isLightBoxOpen}
 												close={() => setIsLightBoxOpen(false)}
 												render={{
@@ -164,36 +165,40 @@ const Message = ({
 												}}
 											/>
 										</>
-										<p
+										<div
 											style={{
 												background: `${me ? main : secondary}`,
 												fontSize: fontSize,
 											}}
-											className={`px-5 py-3 rounded-bl-lg ${
+											className={`px-5 sm:px-3 py-3 sm:py-2 ${
 												me
-													? " text-white rounded-br-none"
-													: "rounded-bl-none dark:text-gray-100"
-											} shadow-xl relative`}
+													? " text-white rounded-bl-lg sm:rounded-bl-md"
+													: "rounded-br-lg sm:rounded-br-md dark:text-gray-100"
+											} shadow-xl relative font-normal break-all`}
 										>
-											{message.message}
-										</p>
+											{message.message
+												.split("\n")
+												.map((m, idx) => m && <p key={idx}>{m}</p>)}
+										</div>
 									</>
 								)}
 								{!message.img && message.message && (
-									<p
+									<div
 										id={message?._id || ""}
 										style={{
 											background: `${me ? main : secondary}`,
 											fontSize: fontSize,
 										}}
-										className={`px-5 py-3 rounded-lg ${
+										className={`px-5 sm:px-3 py-3 sm:py-2 rounded-lg sm:rounded-md ${
 											me
-												? " text-white rounded-br-none"
-												: "rounded-bl-none dark:text-gray-100"
-										} shadow-xl relative`}
+												? " text-white rounded-br-none sm:rounded-br-none"
+												: "rounded-bl-none sm:rounded-bl-none dark:text-gray-100"
+										} shadow-xl relative font-normal break-all`}
 									>
-										{message.message}
-									</p>
+										{message.message
+											.split("\n")
+											.map((m, idx) => m && <p key={idx}>{m}</p>)}
+									</div>
 								)}
 								{message.img && !message.message && (
 									<>
@@ -201,12 +206,17 @@ const Message = ({
 											onClick={() => setIsLightBoxOpen(true)}
 											src={message.img}
 											alt=""
-											className="w-[300px] rounded-lg sm:w-full cursor-pointer"
+											className="w-[300px] rounded-lg sm:w-full cursor-pointer bg-black bg-opacity-50"
 										/>
 										<Lightbox
+											plugins={[Zoom]}
 											open={isLightBoxOpen}
 											close={() => setIsLightBoxOpen(false)}
 											slides={[{ src: message.img }]}
+											render={{
+												buttonPrev: () => null,
+												buttonNext: () => null,
+											}}
 										/>
 									</>
 								)}

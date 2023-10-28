@@ -36,6 +36,7 @@ const Messages = () => {
 	// const [skip, setSkip] = useState<number>(1);
 	const [hasMore, setHasMore] = useState<boolean>(true);
 	const lastMessageRef = useRef<HTMLDivElement | null>(null);
+	const containerRef = useRef<HTMLDivElement | null>(null);
 
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const { secondary, primary, textColor, main } = useColorScheme();
@@ -134,8 +135,14 @@ const Messages = () => {
 
 	/* useEffect(() => {
 		if (lastMessageRef?.current) {
-			lastMessageRef.current?.scrollIntoView();
+			// console.log(data?.data?.[0].sender?._id);
+			if (data?.data?.[0].sender?.id === user?._id) {
+				console.log("inside");
+				// lastMessageRef.current?.scrollIntoView();
+				lastMessageRef.current.scrollTop = lastMessageRef.current?.scrollHeight;
+			}
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [data?.data]); */
 
 	let content;
@@ -179,17 +186,18 @@ const Messages = () => {
 							backgroundColor: bg,
 							borderLeft: `1px solid ${primary}`,
 						}}
-						className="h-[75px] sm:h-[65px] w-full flex items-center relative z-10"
+						className="max-h-[75px] sm:max-h-[60px] w-full py-4 sm:py-2 relative z-10"
 					>
 						<MessageHeader />
 					</div>
 
 					<div
+						ref={lastMessageRef}
 						onClick={handleClick}
 						id="messagesContainer"
-						className="w-full h-[calc(100%_-_165px)] sm:h-[calc(100%_-_100px)] overflow-y-auto px-[55px] md:px-[20px] sm:px-[15px] flex flex-col-reverse gap-3 pt-3 pb-1 relative scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200 scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
+						className="w-full max-h-[calc(100%_-_165px)] sm:max-h-[calc(100%_-_100px)] overflow-y-auto px-[55px] md:px-[20px] sm:px-[15px] flex flex-col-reverse gap-3 pt-3 pb-1 relative lg:scrollbar-thin lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 lg:scrollbar-thumb-rounded-full lg:scrollbar-track-rounded-full"
 					>
-						<div ref={lastMessageRef}></div>
+						{/* <div ref={lastMessageRef}></div> */}
 						{conversation?.data?.deleted ? (
 							<div className="w-full h-full flex justify-center items-center flex-col">
 								<p className="text-xl font-semibold text-gray-500">
@@ -216,7 +224,7 @@ const Messages = () => {
 								inverse={true}
 								scrollableTarget="messagesContainer"
 								endMessage={
-									data?.data?.length > 20 ? (
+									data?.data?.length > 20 && !isLoading && !isFetching ? (
 										<p className="text-center text-lg py-2 text-gray-400 px-[40px] font-light">
 											<b>Finished!</b>
 										</p>
@@ -233,7 +241,11 @@ const Messages = () => {
 							style={{ background: secondary, color: textColor }}
 							className="px-[55px] md:px-[20px] sm:px-[15px] py-3 w-full flex items-center justify-between"
 						>
-							{!reply.img && <p>Replying: {reply.message}</p>}
+							{!reply.img && (
+								<p className="line-clamp-1 overflow-hidden">
+									Replying: {reply.message}
+								</p>
+							)}
 							{reply.img && (
 								<div className="flex items-center gap-10">
 									<div>
@@ -252,7 +264,11 @@ const Messages = () => {
 							</button>
 						</div>
 					)}
-					<div className="h-[90px] flex items-center" onClick={handleClick}>
+					<div
+						className="max-h-[140px] py-4 sm:py-3"
+						onClick={handleClick}
+						ref={containerRef}
+					>
 						{isMember
 							? conversation?.data &&
 							  !conversation?.data?.deleted && (
@@ -260,6 +276,7 @@ const Messages = () => {
 										reply={reply}
 										setReply={setReply}
 										lastMessageRef={lastMessageRef}
+										containerRef={containerRef}
 									/>
 							  )
 							: !cLoading &&

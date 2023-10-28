@@ -8,6 +8,7 @@ import {
 } from "../../../lib/redux/slices/common/commonSlice";
 import { Dispatch, RefObject, SetStateAction } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import Menu from "./Menu";
 
 type Prop = {
 	setSearchText: Dispatch<SetStateAction<string>>;
@@ -25,7 +26,7 @@ const ConversationHeader = ({ setSearchText, searchRef }: Prop) => {
 
 	return (
 		// Theme color
-		<div className="w-full h-[75px] flex items-center gap-2 px-[25px] md:px-[15px] sm:px-[15px]">
+		<div className="w-full h-[75px] flex items-center gap-2 px-[25px] md:px-[15px] sm:px-[15px] relative overflow-visible">
 			{searchFocus && (
 				<button onClick={() => dispatch(IsSearchFocus(false))}>
 					<FiArrowLeft className="text-[25px] text-[#B4B4B4]" />
@@ -52,6 +53,15 @@ const ConversationHeader = ({ setSearchText, searchRef }: Prop) => {
 				<button onClick={() => dispatch(openMenu(false))}>
 					<AiOutlineClose className="text-[30px] text-[#B4B4B4] dark:text-[#7e7e7e]" />
 				</button>
+			)}
+			{!searchFocus && (
+				<div
+					className={`absolute top-[80px] left-12 md:right-0 md:px-4 sm:right-0 px-4 z-50 ${
+						menuOpen ? "h-full" : "h-0"
+					}`}
+				>
+					<Menu />
+				</div>
 			)}
 		</div>
 	);
