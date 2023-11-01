@@ -10,6 +10,7 @@ import { useGetSingleConversationQuery } from "../../../lib/redux/slices/convers
 import moment from "moment";
 import { UserInterface } from "../../../interfaces/user";
 import useColorScheme from "../../../Hooks/useColorScheme";
+import tinycolor from "tinycolor2";
 // type Props = {}
 
 const MessageHeader = () => {
@@ -27,7 +28,8 @@ const MessageHeader = () => {
 		: data?.data?.participants.find((p: UserInterface) => p._id !== user?._id)
 				.color;
 
-	const { textColor } = useColorScheme();
+	const { textColor, primary, secondary } = useColorScheme();
+	const bg = tinycolor(secondary).setAlpha(0.8).toRgbString();
 
 	let content;
 
@@ -81,7 +83,13 @@ const MessageHeader = () => {
 	}
 
 	return (
-		<div className="flex justify-between items-center px-[25px] sm:px-[15px] w-full relative">
+		<div
+			style={{
+				backgroundColor: bg,
+				borderLeft: `1px solid ${primary}`,
+			}}
+			className="flex justify-between items-center px-[25px] sm:px-[15px] min-h-[75px] sm:min-h-[60px] py-2 w-full relative z-10"
+		>
 			<div className="flex items-center gap-3">{content}</div>
 			<button
 				onClick={() => dispatch(conversationOptionsOn(!conversationOptions))}
@@ -89,7 +97,7 @@ const MessageHeader = () => {
 				<BiDotsVerticalRounded className="text-[#4B4B4B] dark:text-white text-3xl" />
 			</button>
 			{conversationOptions && (
-				<div className="absolute -bottom-[70px] right-4 z-50">
+				<div className="absolute -bottom-[30px] right-4 z-50">
 					<ConversationOptions conversation={data?.data} />
 				</div>
 			)}

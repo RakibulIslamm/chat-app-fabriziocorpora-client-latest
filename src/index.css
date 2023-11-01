@@ -6,4 +6,18 @@
 
 body {
 	font-family: "Poppins", sans-serif;
+	overflow: hidden;
+}
+
+#anchor {
+	overflow-anchor: auto;
+	height: 1px;
+}
+
+.item {
+	transform: translateZ(0);
+}
+
+.message {
+	overflow-wrap: anywhere;
 }

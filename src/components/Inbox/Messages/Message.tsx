@@ -74,14 +74,18 @@ const Message = ({
 	return (
 		// Theme color
 		<div
-			className={`w-full flex ${me ? "justify-end" : "justify-start"}`}
-			id={message?._id || ""}
+			className={`inline-block ${me ? "ml-auto" : "mr-auto"} item relative`}
+			// className={`w-full flex ${me ? "justify-end" : "justify-start"}`}
+			/* onContextMenu={(e) => {
+				e.preventDefault();
+				alert(message._id);
+			}} */
 		>
 			<div className="inline-block space-y-1 max-w-[600px] md:max-w-[400px] sm:max-w-[350px]">
 				<div
 					className={`flex ${
 						me && "flex-row-reverse"
-					} items-center gap-5 group/message relative`}
+					} items-center gap-5 relative group/message z-10`}
 				>
 					<div>
 						{message?.sender?.id !== user?._id && isGroup && (
@@ -114,7 +118,7 @@ const Message = ({
 													?.scrollIntoView(true);
 											}}
 											style={{ background: `${me ? secondary : replyBg}` }}
-											className="px-4 pt-2 pb-7 bg-slate-400 break-words relative top-5 z-0 rounded-t-lg dark:text-white text-sm font-light shadow-xl"
+											className="px-4 pt-2 pb-7 bg-slate-400 break-words message relative top-5 z-0 rounded-t-lg dark:text-white text-sm font-light shadow-xl"
 										>
 											<img
 												src={message.replyTo.img}
@@ -130,7 +134,7 @@ const Message = ({
 													?.scrollIntoView(true);
 											}}
 											style={{ background: `${me ? secondary : replyBg}` }}
-											className="px-4 pt-2 pb-7 bg-slate-400 break-words relative top-5 z-0 rounded-t-lg dark:text-white text-sm font-light shadow-xl"
+											className="px-4 pt-2 pb-7 bg-slate-400 break-words line-clamp-1 relative top-5 z-0 rounded-t-lg dark:text-white text-sm font-light shadow-xl"
 										>
 											{message.replyTo?.message}
 										</p>
@@ -166,6 +170,10 @@ const Message = ({
 											/>
 										</>
 										<div
+											onContextMenu={(e) => {
+												e.preventDefault();
+												setOption(true);
+											}}
 											style={{
 												background: `${me ? main : secondary}`,
 												fontSize: fontSize,
@@ -174,7 +182,7 @@ const Message = ({
 												me
 													? " text-white rounded-bl-lg sm:rounded-bl-md"
 													: "rounded-br-lg sm:rounded-br-md dark:text-gray-100"
-											} shadow-xl relative font-normal break-all`}
+											} shadow-xl relative font-normal break-words message z-0`}
 										>
 											{message.message
 												.split("\n")
@@ -184,6 +192,10 @@ const Message = ({
 								)}
 								{!message.img && message.message && (
 									<div
+										onContextMenu={(e) => {
+											e.preventDefault();
+											setOption(true);
+										}}
 										id={message?._id || ""}
 										style={{
 											background: `${me ? main : secondary}`,
@@ -193,7 +205,7 @@ const Message = ({
 											me
 												? " text-white rounded-br-none sm:rounded-br-none"
 												: "rounded-bl-none sm:rounded-bl-none dark:text-gray-100"
-										} shadow-xl relative font-normal break-all`}
+										} shadow-xl relative font-normal break-words message`}
 									>
 										{message.message
 											.split("\n")
@@ -242,7 +254,7 @@ const Message = ({
 										className={`transform ${!me && "-scale-x-[1]"} text-2xl`}
 									/>
 								</button>
-								<div className="relative flex items-center">
+								<div className="flex items-center relative">
 									<button onClick={() => setOption(!option)}>
 										<BsThreeDotsVertical
 											className={`transform ${!me && "-scale-x-[1]"} text-2xl`}
@@ -257,12 +269,14 @@ const Message = ({
 												border: `1px solid ${border}`,
 											}}
 											className={`absolute bg-white flex justify-center items-center flex-col text-sm ${
-												me ? "-left-20 sm:left-2" : "-right-20 sm:right-2"
-											} backdrop-blur-[3px] rounded-lg shadow z-50 overflow-hidden ${
+												me
+													? "-left-20 md:left-2 sm:left-2"
+													: "-right-20 md:right-2 sm:right-2"
+											} backdrop-blur-[3px] rounded-lg shadow z-50 ${
 												option
-													? "bottom-2 sm:bottom-10 visible opacity-100"
-													: "bottom-4 sm:bottom-14 invisible opacity-0"
-											} transition-all ease-in-out`}
+													? "bottom-0 md:-bottom-5 sm:-bottom-5 visible opacity-100"
+													: "bottom-4 md:bottom-0 sm:bottom-0 invisible opacity-0"
+											} transition-all ease-in-out z-50`}
 										>
 											<button
 												onClick={() => {

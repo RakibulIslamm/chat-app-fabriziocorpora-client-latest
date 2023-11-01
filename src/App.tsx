@@ -7,12 +7,12 @@ import {
 	setThemeColor,
 } from "./lib/redux/slices/theme/themeSlice";
 import { isJSONValid } from "./utils/isValidJson";
-import { socket } from "./utils/socket";
+// import { socket } from "./utils/socket";
 import useListenAuth from "./Hooks/useListenAuth";
 import useColorScheme from "./Hooks/useColorScheme";
 
 function App() {
-	socket.connect();
+	// socket.connect();
 	const { theme } = useSelector((state: ReduxState) => state.theme);
 	const dispatch = useDispatch();
 	useEffect(() => {

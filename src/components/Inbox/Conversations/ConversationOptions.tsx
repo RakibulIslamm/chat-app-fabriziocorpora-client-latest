@@ -55,10 +55,10 @@ const ConversationOptions = ({
 							deleteConversation(id);
 							navigate("/");
 						}}
-						className="w-full px-3 py-1 hover:bg-white dark:hover:bg-[#00000033] rounded flex items-center gap-2 menu"
+						className="w-full px-3 sm:px-1 py-1 sm:py-0 hover:bg-white dark:hover:bg-[#00000033] rounded flex items-center gap-2 menu"
 					>
-						<IoTrashBinSharp className="text-xl menu" />
-						Delete Conversation
+						<IoTrashBinSharp className="text-xl sm:text-base menu" />
+						<span className="sm:text-sm font-normal">Delete</span>
 					</button>
 				</div>
 			)}

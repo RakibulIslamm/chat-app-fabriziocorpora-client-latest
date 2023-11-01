@@ -19,14 +19,15 @@ import {
 	useGetMoreConversationsQuery,
 } from "../../../lib/redux/slices/conversation/conversationApi";
 import { ConversationInterface } from "../../../interfaces/conversation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { signal, effect } from "@preact/signals";
 
 const Conversations = () => {
 	const [searchText, setSearchText] = useState<string>("");
 	const searchRef = useRef(null);
-	// const [skip, setSkip] = useState<number>(1);
-	const [hasMore, setHasMore] = useState<boolean>(true);
+	// const [hasMore, setHasMore] = useState<boolean>(true);
+	const hasMore = signal<boolean>(true);
 	const { menuOpen, searchFocus, newChatOptions } = useSelector(
 		(state: ReduxState) => state.common
 	);
@@ -47,12 +48,19 @@ const Conversations = () => {
 		limit: 8,
 	});
 
-	useEffect(() => {
+	/* useEffect(() => {
 		if (data?.data?.length >= data?.count) {
 			setHasMore(false);
 			return;
 		}
-	}, [data]);
+	}, [data]); */
+
+	effect(() => {
+		if (data?.data?.length >= data?.count) {
+			hasMore.value = false;
+			return;
+		}
+	});
 
 	const fetchMoreData = () => {
 		if (moreLoading || isFetching) {
@@ -107,7 +115,7 @@ const Conversations = () => {
 					<InfiniteScroll
 						dataLength={data?.data?.length || 8}
 						next={fetchMoreData}
-						hasMore={hasMore}
+						hasMore={hasMore.value}
 						loader={
 							!isLoading ? (
 								<h4 className="text-xl font-semibold py-2 text-gray-400 px-[40px]">

@@ -83,7 +83,7 @@ const Forward = ({ setForwardOpen, message }: Props) => {
 				/>
 				<IoSearchOutline className="absolute top-1/2 right-6 transform -translate-y-1/2 text-3xl text-[#B4B4B4]" />
 			</div>
-			<div className="p-4 gap-4 h-[250px] max-h-[45%] overflow-hidden overflow-y-auto scrollbar-thin scrollbar-thumb-lightBlack scrollbar-track-[#1d2535]">
+			<div className="p-4 space-y-3 h-[250px] max-h-[45%] overflow-hidden overflow-y-auto scrollbar-thin scrollbar-thumb-lightBlack scrollbar-track-[#1d2535]">
 				{content}
 			</div>
 		</div>
