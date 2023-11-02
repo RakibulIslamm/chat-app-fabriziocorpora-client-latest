@@ -40,7 +40,7 @@ const User = ({ conversation, searchRef }: Props) => {
 					{participant?.name}
 				</p>
 				<small className="inline-block min-w-fit">
-					{moment(conversation.timestamp).fromNow()}
+					{moment(participant?.lastActive).fromNow()}
 				</small>
 			</div>
 		</Link>

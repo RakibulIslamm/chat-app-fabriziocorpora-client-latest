@@ -3,7 +3,7 @@ import { IoIosSend } from "react-icons/io";
 import { BsEmojiSmile } from "react-icons/bs";
 import { RiAttachment2 } from "react-icons/ri";
 import { RxCrossCircled } from "react-icons/rx";
-import { useState, FormEvent, Dispatch, SetStateAction } from "react";
+import { useState, Dispatch, SetStateAction, KeyboardEvent } from "react";
 import EmojiPicker from "emoji-picker-react";
 import { ReduxState, useSelector } from "../../../lib/redux/store";
 import { Theme } from "emoji-picker-react/dist";
@@ -12,6 +12,7 @@ import { useUpdateConversationMutation } from "../../../lib/redux/slices/convers
 import { useSendMessageMutation } from "../../../lib/redux/slices/message/messageApi";
 import useGetCompressedImage from "../../../Hooks/useGetCompressedImage";
 import { MessageInterface } from "../../../interfaces/message";
+import { AiOutlineArrowDown } from "react-icons/ai";
 
 type Props = {
 	reply: MessageInterface | null;
@@ -30,11 +31,14 @@ const MessageFooter = ({
 	const { theme } = useSelector((state: ReduxState) => state.theme);
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const [showEmojis, setShowEmojis] = useState(false);
+	const [scrollPosition, setScrollPosition] = useState(0);
 	const [input, setInput] = useState("");
+
 	const emojiPickerRef = useRef<HTMLDivElement | null>(null);
 	const { id } = useParams();
 	const imgRef = useRef<HTMLInputElement | null>(null);
 	const inputRef = useRef<HTMLInputElement | null>(null);
+	const mobileInputRef = useRef<HTMLInputElement | null>(null);
 
 	const [sendMessage, { isLoading: sending, isSuccess }] =
 		useSendMessageMutation();
@@ -77,8 +81,8 @@ const MessageFooter = ({
 		handleCompressedUpload(file);
 	};
 
-	const handleMessageSend = async (e: FormEvent) => {
-		e.preventDefault();
+	const handleMessageSend = async () => {
+		// e.preventDefault();
 		const s = input.replace(/[\s\r\n]+/g, "");
 		if (!s && !imgLink) {
 			inputRef!.current!.focus();
@@ -110,6 +114,7 @@ const MessageFooter = ({
 			setBase64Img("");
 			setImgLink("");
 			inputRef!.current!.innerText = "";
+			mobileInputRef!.current!.innerText = "";
 			setShowEmojis(false);
 			await sendMessage(data);
 			if (containerRef.current) {
@@ -137,9 +142,52 @@ const MessageFooter = ({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isSuccess]);
 
+	const handleEnterKey = (e: KeyboardEvent<HTMLParagraphElement>) => {
+		if (e.key === "Enter" || e.key === "Return" || e.keyCode === 13) {
+			if (e.shiftKey) {
+				// If Shift key is held, create a new line
+				// You can add your code to create a new line here.
+				// console.log("Shift key");
+			} else {
+				e.preventDefault();
+				handleMessageSend();
+			}
+		}
+	};
+
+	useEffect(() => {
+		const handleScroll = () => {
+			if (containerRef.current) {
+				// Calculate the scroll position and count of messages
+				const container = containerRef.current;
+				const scrollTop = container.scrollTop;
+				// const scrollHeight = container.scrollHeight;
+				// const clientHeight = container.clientHeight;
+				// const messagesCount = container.children.length;
+
+				setScrollPosition(scrollTop);
+			}
+		};
+
+		if (containerRef.current) {
+			containerRef!.current!.addEventListener("scroll", handleScroll);
+		}
+
+		return () => {
+			if (containerRef!.current) {
+				containerRef!.current!.removeEventListener("scroll", handleScroll);
+			}
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	const handleScrollBottom = () => {
+		containerRef!.current!.scrollTop = 0;
+	};
+
 	return (
 		<div
-			className="max-h-[140px] min-h-[90px] sm:min-h-[60px] flex justify-end mb-3"
+			className="max-h-[140px] min-h-[90px] sm:min-h-[60px] flex justify-end mb-3 relative"
 			onClick={handleClick}
 		>
 			<div className="flex justify-between items-end gap-3 px-[55px] md:px-[20px] sm:px-[15px] w-full relative">
@@ -171,14 +219,23 @@ const MessageFooter = ({
 						)}
 					</div>
 				)}
+				{/* message Input start */}
 				<div
 					className="w-[calc(100%_-_60px)] relative rounded-xl sm:rounded-lg rounded-br-none sm:rounded-br-none px-[55px] border border-[#b4b4b4] dark:border-[#b4b4b44b] outline-none bg-white dark:bg-opacity-10 backdrop-blur-sm dark:text-white"
 					ref={emojiPickerRef}
 				>
 					<p
+						onKeyDown={handleEnterKey}
 						contentEditable={true}
-						className={`w-full my-3 max-h-[80px] outline-none overflow-auto relative z-10 scrollbar-none`}
+						className={`w-full my-3 max-h-[80px] outline-none overflow-auto relative z-10 scrollbar-none sm:hidden`}
 						ref={inputRef}
+						onInput={handleContentChange}
+						onClick={() => setShowEmojis(false)}
+					></p>
+					<p
+						contentEditable={true}
+						className={`w-full my-3 max-h-[80px] outline-none overflow-auto relative z-10 scrollbar-none hidden sm:block`}
+						ref={mobileInputRef}
 						onInput={handleContentChange}
 						onClick={() => setShowEmojis(false)}
 					></p>
@@ -222,6 +279,7 @@ const MessageFooter = ({
 						</div>
 					)}
 				</div>
+				{/* message Input end */}
 				<button
 					onClick={handleMessageSend}
 					type="button"
@@ -231,6 +289,15 @@ const MessageFooter = ({
 					<IoIosSend className="text-[#4B4B4B] text-3xl sm:text-2xl" />
 				</button>
 			</div>
+
+			{Math.abs(scrollPosition) > 300 ? (
+				<button
+					onClick={handleScrollBottom}
+					className="absolute text-2xl bottom-20 right-1/2 transform -translate-x-1/2 p-4 rounded-full bg-black bg-opacity-10 text-gray-500"
+				>
+					<AiOutlineArrowDown />
+				</button>
+			) : null}
 		</div>
 	);
 };
