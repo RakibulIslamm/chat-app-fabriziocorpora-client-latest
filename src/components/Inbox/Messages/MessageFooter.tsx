@@ -293,7 +293,7 @@ const MessageFooter = ({
 			{Math.abs(scrollPosition) > 300 ? (
 				<button
 					onClick={handleScrollBottom}
-					className="absolute text-2xl bottom-20 right-1/2 transform -translate-x-1/2 p-4 rounded-full bg-black bg-opacity-10 text-gray-500"
+					className="absolute text-2xl bottom-20 left-1/2 transform -translate-x-1/2 p-4 rounded-full bg-black bg-opacity-10 text-gray-500"
 				>
 					<AiOutlineArrowDown />
 				</button>
