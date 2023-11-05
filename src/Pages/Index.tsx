@@ -23,11 +23,9 @@ const Index = () => {
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			if (socket.disconnected) {
-				socket.connect();
-				socket.emit("new_user", user?._id);
-			}
-		}, 30000);
+			socket.connect();
+			socket.emit("new_user", user?._id);
+		}, 5000);
 		return () => clearInterval(interval);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);

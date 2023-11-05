@@ -27,6 +27,7 @@ const NewGroup = () => {
 	const { isLoading, isError, data } = useGetMembersQuery({
 		id: user?._id,
 		q: searchText,
+		conversationId: "",
 	});
 	const [createConversation, { isLoading: groupCreating }] =
 		useCreateConversationMutation();

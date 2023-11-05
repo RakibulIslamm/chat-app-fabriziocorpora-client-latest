@@ -9,6 +9,8 @@ type commonSliceType = {
 	newGroup: boolean;
 	newChat: boolean;
 	settings: boolean;
+	groupMembers: boolean;
+	addMembers: boolean;
 };
 
 const initialState: commonSliceType = {
@@ -20,6 +22,8 @@ const initialState: commonSliceType = {
 	newChat: false,
 	newGroup: false,
 	settings: false,
+	groupMembers: false,
+	addMembers: false,
 };
 
 const commonSlice = createSlice({
@@ -109,6 +113,14 @@ const commonSlice = createSlice({
 		conversationOptionsOn: (state, action) => {
 			state.conversationOptions = action.payload;
 		},
+		groupMembersOn: (state, action) => {
+			state.groupMembers = action.payload;
+			state.conversationOptions = false;
+		},
+		addMembersOn: (state, action) => {
+			state.addMembers = action.payload;
+			state.conversationOptions = false;
+		},
 	},
 });
 
@@ -122,4 +134,6 @@ export const {
 	settingsOn,
 	conversationOn,
 	conversationOptionsOn,
+	groupMembersOn,
+	addMembersOn,
 } = commonSlice.actions;

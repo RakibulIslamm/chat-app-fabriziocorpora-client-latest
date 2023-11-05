@@ -5,6 +5,7 @@ import { setCurrentUser } from "../lib/redux/slices/user/userSlice";
 import { useDispatch } from "../lib/redux/store";
 import { getRandomColor } from "../utils/randomColor";
 import { socket } from "../utils/socket";
+import { serverUrl } from "../utils/serverUrl";
 
 const Register = () => {
 	const [name, setName] = useState("");
@@ -41,16 +42,13 @@ const Register = () => {
 
 		try {
 			setLoading(true);
-			const res = await fetch(
-				"https://chat-app-fabriziocorpora.onrender.com/api/users/register",
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(data),
-				}
-			);
+			const res = await fetch(`${serverUrl}/api/users/register`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(data),
+			});
 
 			const res_data = await res.json();
 			if (!res_data.success) {

@@ -11,7 +11,6 @@ import moment from "moment";
 import { UserInterface } from "../../../interfaces/user";
 import useColorScheme from "../../../Hooks/useColorScheme";
 import tinycolor from "tinycolor2";
-// type Props = {}
 
 const MessageHeader = () => {
 	const navigate = useNavigate();
@@ -20,16 +19,16 @@ const MessageHeader = () => {
 	);
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const { id } = useParams();
-	const { data, isLoading, isError } = useGetSingleConversationQuery(id);
 	const dispatch = useDispatch();
+	const { textColor, primary, secondary } = useColorScheme();
+	const bg = tinycolor(secondary).setAlpha(0.8).toRgbString();
+
+	const { data, isLoading, isError } = useGetSingleConversationQuery(id);
 
 	const participantColor = data?.data?.isGroup
 		? data?.data?.groupColor
 		: data?.data?.participants.find((p: UserInterface) => p._id !== user?._id)
 				.color;
-
-	const { textColor, primary, secondary } = useColorScheme();
-	const bg = tinycolor(secondary).setAlpha(0.8).toRgbString();
 
 	let content;
 
@@ -96,11 +95,17 @@ const MessageHeader = () => {
 			>
 				<BiDotsVerticalRounded className="text-[#4B4B4B] dark:text-white text-3xl" />
 			</button>
-			{conversationOptions && (
-				<div className="absolute -bottom-[30px] right-4 z-50">
+			{
+				<div
+					className={`absolute top-[60px] right-8 sm:right-4 z-50 ${
+						conversationOptions
+							? "h-full w-fit visible opacity-1 transition-all ease-in-out"
+							: "h-0 w-0 invisible opacity-0"
+					}`}
+				>
 					<ConversationOptions conversation={data?.data} />
 				</div>
-			)}
+			}
 		</div>
 	);
 };

@@ -1,5 +1,6 @@
 import { socket } from "../../../../utils/socket";
 import apiSlice from "../api/apiSlice";
+import { toast } from "react-toastify";
 
 export const messageApi = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
@@ -9,6 +10,42 @@ export const messageApi = apiSlice.injectEndpoints({
 				method: "POST",
 				body: data,
 			}),
+			async onQueryStarted(data, { dispatch, queryFulfilled }) {
+				// console.log(data);
+				const patchResult = dispatch(
+					messageApi.util.updateQueryData(
+						"getMessages",
+						{ conversationId: data.conversationId, userId: data.sender.id },
+						(draft) => {
+							draft.data.unshift(data);
+						}
+					)
+				);
+				try {
+					const message = await queryFulfilled;
+					dispatch(
+						messageApi.util.updateQueryData(
+							"getMessages",
+							{
+								conversationId: data.conversationId,
+								userId: data.sender?.id,
+							},
+							(draft) => {
+								for (const m of draft.data) {
+									if (m.messageId === message.data?.data?.messageId) {
+										m.status = "sent";
+										m._id = message.data?.data?._id;
+										break;
+									}
+								}
+							}
+						)
+					);
+				} catch (err) {
+					patchResult.undo();
+					toast.error("Something went wrong!");
+				}
+			},
 		}),
 
 		deleteMessage: builder.mutation({
@@ -18,21 +55,36 @@ export const messageApi = apiSlice.injectEndpoints({
 			}),
 		}),
 
+		deleteAllMessage: builder.mutation({
+			query: (id) => ({
+				url: `/messages/delete-all-message/${id}`,
+				method: "DELETE",
+			}),
+			invalidatesTags: ["messages", "moreMessages"],
+		}),
+
 		getMessages: builder.query({
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			query: ({ conversationId }) =>
 				`/messages?conversationId=${conversationId}`,
+			providesTags: ["messages"],
 			async onCacheEntryAdded(
-				{ conversationId },
+				{ conversationId, userId },
 				{ cacheDataLoaded, cacheEntryRemoved, updateCachedData }
 			) {
 				try {
 					await cacheDataLoaded;
 					socket.on("message", async (data) => {
 						await cacheDataLoaded;
+						let previousId: string;
 						updateCachedData((draft) => {
-							if (conversationId === data.conversationId) {
+							if (
+								conversationId === data.conversationId &&
+								data.sender.id !== userId &&
+								previousId !== data.messageId
+							) {
 								draft.data.unshift(data);
+								previousId = data.messageId;
 							}
 						});
 					});
@@ -94,6 +146,14 @@ export const messageApi = apiSlice.injectEndpoints({
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			query: ({ conversationId, limit, skip }) =>
 				`/messages/more-messages?conversationId=${conversationId}&limit=${limit}&skip=${skip}`,
+			providesTags: ["moreMessages"],
+		}),
+		uploadFile: builder.mutation({
+			query: (data) => ({
+				url: "/upload",
+				method: "POST",
+				body: data,
+			}),
 		}),
 	}),
 });
@@ -103,4 +163,6 @@ export const {
 	useDeleteMessageMutation,
 	useGetMessagesQuery,
 	useGetMoreMessagesQuery,
+	useUploadFileMutation,
+	useDeleteAllMessageMutation,
 } = messageApi;

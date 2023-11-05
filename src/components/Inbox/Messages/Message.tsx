@@ -9,7 +9,7 @@ import { ReduxState } from "../../../lib/redux/store";
 import { MessageInterface } from "../../../interfaces/message";
 import { formateDate } from "../../../utils/formateDate";
 import { useGetSingleConversationQuery } from "../../../lib/redux/slices/conversation/conversationApi";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { socket } from "../../../utils/socket";
 import { useDeleteMessageMutation } from "../../../lib/redux/slices/message/messageApi";
 import Lightbox from "yet-another-react-lightbox";
@@ -17,6 +17,8 @@ import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import { Captions } from "yet-another-react-lightbox/plugins";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import { AiOutlineDownload, AiOutlineFile } from "react-icons/ai";
+import { serverUrl } from "../../../utils/serverUrl";
 
 type Props = {
 	message: MessageInterface;
@@ -32,6 +34,7 @@ const Message = ({
 	setForwardOpen,
 }: Props) => {
 	const [option, setOption] = useState(false);
+	const [downloading, setDownloading] = useState(false);
 	const [isLightBoxOpen, setIsLightBoxOpen] = useState(false);
 
 	const { user } = useSelector((state: ReduxState) => state.user);
@@ -70,29 +73,49 @@ const Message = ({
 	}, []);
 
 	const [deleteMessage] = useDeleteMessageMutation();
+	const re = /(?:\.([^.]+))?$/;
 
-	return (
-		// Theme color
+	const downloadFile = async (fileUrl: string, fileName: string) => {
+		try {
+			setDownloading(true);
+			const response = await fetch(fileUrl);
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = fileName;
+			document.body.appendChild(a);
+			a.click();
+			window.URL.revokeObjectURL(url);
+		} catch (error) {
+			console.error("Error downloading file:", error);
+		} finally {
+			setDownloading(false);
+		}
+	};
+
+	return !message.forGroup ? (
 		<div
 			className={`inline-block ${me ? "ml-auto" : "mr-auto"} item relative`}
 			// className={`w-full flex ${me ? "justify-end" : "justify-start"}`}
-			/* onContextMenu={(e) => {
-				e.preventDefault();
-				alert(message._id);
-			}} */
 		>
 			<div className="inline-block space-y-1 max-w-[600px] md:max-w-[400px] sm:max-w-[350px]">
+				{message?.sender?.id !== user?._id && isGroup && (
+					<p
+						style={{
+							color: tinycolor(textColor).setAlpha(0.5).toRgbString(),
+						}}
+						className="text-sm"
+					>
+						{message?.sender?.name}
+					</p>
+				)}
 				<div
 					className={`flex ${
 						me && "flex-row-reverse"
 					} items-center gap-5 relative group/message z-10`}
 				>
 					<div>
-						{message?.sender?.id !== user?._id && isGroup && (
-							<p style={{ color: textColor }} className="text-sm">
-								{message?.sender?.name}
-							</p>
-						)}
 						{message?.deleted ? (
 							<p
 								style={{
@@ -139,14 +162,14 @@ const Message = ({
 											{message.replyTo?.message}
 										</p>
 									))}
-								{message.img && message.message && (
+								{!message?.file?.name && message.img && message.message && (
 									<>
 										<>
 											<img
 												onClick={() => setIsLightBoxOpen(true)}
 												id={message?._id || ""}
-												src={message.img}
-												alt=""
+												src={`${serverUrl}${message?.img}`}
+												alt="Image"
 												className="w-[300px] rounded-t-lg sm:w-full cursor-pointer bg-black bg-opacity-50"
 											/>
 											<Lightbox
@@ -159,7 +182,7 @@ const Message = ({
 												}}
 												slides={[
 													{
-														src: message.img,
+														src: `${serverUrl}${message?.img}`,
 														description: message.message || "",
 													},
 												]}
@@ -178,11 +201,11 @@ const Message = ({
 												background: `${me ? main : secondary}`,
 												fontSize: fontSize,
 											}}
-											className={`px-5 sm:px-3 py-3 sm:py-2 ${
+											className={`max-w-[300px] px-5 sm:px-3 py-3 sm:py-2 ${
 												me
 													? " text-white rounded-bl-lg sm:rounded-bl-md"
 													: "rounded-br-lg sm:rounded-br-md dark:text-gray-100"
-											} shadow-xl relative font-normal break-words message z-0`}
+											} shadow-xl relative font-normal break-words message`}
 										>
 											{message.message
 												.split("\n")
@@ -190,7 +213,67 @@ const Message = ({
 										</div>
 									</>
 								)}
-								{!message.img && message.message && (
+								{message?.file?.name && (
+									<div>
+										<div
+											onContextMenu={(e) => {
+												e.preventDefault();
+												setOption(true);
+											}}
+											className={`text-gray-300 flex items-center gap-2 px-5 py-3 sm:px-3 sm:py-2 ${
+												message.message
+													? "rounded-t-lg sm:rounded-t-md"
+													: "rounded-full"
+											} bg-gray-700`}
+										>
+											<AiOutlineFile className="text-2xl sm:text-lg" />
+											<Link
+												to={`${serverUrl}${message?.file?.link}`}
+												target="_blank"
+												className="w-[calc(100%_-_50px)] flex items-center"
+											>
+												<span className="line-clamp-1 break-all">
+													{message?.file.name.replace(/\.[^/.]+$/, "")}
+												</span>
+												.{re.exec(message?.file.name)?.[1]}
+											</Link>
+											<button
+												disabled={downloading}
+												onClick={() =>
+													downloadFile(
+														`${serverUrl}${message?.file?.link}` as string,
+														message?.file?.name as string
+													)
+												}
+												className="text-xl"
+											>
+												<AiOutlineDownload />
+											</button>
+										</div>
+										{message.message && (
+											<div
+												onContextMenu={(e) => {
+													e.preventDefault();
+													setOption(true);
+												}}
+												style={{
+													background: `${me ? main : secondary}`,
+													fontSize: fontSize,
+												}}
+												className={`px-5 sm:px-3 py-3 sm:py-2 ${
+													me
+														? " text-white rounded-bl-lg sm:rounded-bl-md"
+														: "rounded-br-lg sm:rounded-br-md dark:text-gray-100"
+												} shadow-xl relative font-normal break-words message`}
+											>
+												{message.message
+													.split("\n")
+													.map((m, idx) => m && <p key={idx}>{m}</p>)}
+											</div>
+										)}
+									</div>
+								)}
+								{!message?.file?.name && !message.img && message.message && (
 									<div
 										onContextMenu={(e) => {
 											e.preventDefault();
@@ -212,19 +295,23 @@ const Message = ({
 											.map((m, idx) => m && <p key={idx}>{m}</p>)}
 									</div>
 								)}
-								{message.img && !message.message && (
+								{!message?.file?.name && message.img && !message.message && (
 									<>
 										<img
 											onClick={() => setIsLightBoxOpen(true)}
-											src={message.img}
-											alt=""
+											src={`${serverUrl}${message?.img}`}
+											alt="Image"
 											className="w-[300px] rounded-lg sm:w-full cursor-pointer bg-black bg-opacity-50"
 										/>
 										<Lightbox
 											plugins={[Zoom]}
 											open={isLightBoxOpen}
 											close={() => setIsLightBoxOpen(false)}
-											slides={[{ src: message.img }]}
+											slides={[
+												{
+													src: `${serverUrl}${message?.img}`,
+												},
+											]}
 											render={{
 												buttonPrev: () => null,
 												buttonNext: () => null,
@@ -278,24 +365,32 @@ const Message = ({
 													: "bottom-4 md:bottom-0 sm:bottom-0 invisible opacity-0"
 											} transition-all ease-in-out z-50`}
 										>
-											<button
-												onClick={() => {
-													setForwardMessage(message);
-													setForwardOpen(true);
-												}}
-												className="hover:bg-gray-200 px-3 py-2 block w-full rounded-lg text-gray-600"
-												title="Forward"
-											>
-												Forward
-											</button>
-											{message?.sender?.id === user?._id && (
-												<button
-													onClick={() => deleteMessage(message?._id)}
-													className="hover:bg-gray-200 px-3 py-2 block w-full rounded-lg text-gray-600"
-													title="Delete this message"
-												>
-													Delete
-												</button>
+											{!message.status ? (
+												<div className="p-5">
+													<div className="border-t-transparent border-solid animate-spin  rounded-full border-gray-700 border h-6 w-6"></div>
+												</div>
+											) : (
+												<>
+													<button
+														onClick={() => {
+															setForwardMessage(message);
+															setForwardOpen(true);
+														}}
+														className="hover:bg-gray-200 px-3 py-2 block w-full rounded-lg text-gray-600"
+														title="Forward"
+													>
+														Forward
+													</button>
+													{message?.sender?.id === user?._id && (
+														<button
+															onClick={() => deleteMessage(message?._id)}
+															className="hover:bg-gray-200 px-3 py-2 block w-full rounded-lg text-gray-600"
+															title="Delete this message"
+														>
+															Delete
+														</button>
+													)}
+												</>
 											)}
 										</div>
 									}
@@ -327,6 +422,15 @@ const Message = ({
 					</div>
 				)}
 			</div>
+		</div>
+	) : (
+		<div className="w-full flex justify-center">
+			<p
+				style={{ color: tinycolor(textColor).setAlpha(0.6).toRgbString() }}
+				className="text-base sm:text-sm font-light w-[70%] sm:w-[90%] text-center"
+			>
+				{message.message}
+			</p>
 		</div>
 	);
 };

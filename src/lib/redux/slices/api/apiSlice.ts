@@ -7,6 +7,7 @@ import {
 	createApi,
 	fetchBaseQuery,
 } from "@reduxjs/toolkit/query/react";
+import { serverUrl } from "../../../../utils/serverUrl";
 
 export type CustomFetchBaseQueryError = FetchBaseQueryError & {
 	data?: {
@@ -29,9 +30,16 @@ type CustomBaseQueryFn = BaseQueryFn<
 export const apiSlice = createApi({
 	reducerPath: "chat-application",
 	baseQuery: fetchBaseQuery({
-		baseUrl: "https://chat-app-fabriziocorpora.onrender.com/api",
+		baseUrl: `${serverUrl}/api`,
 	}) as CustomBaseQueryFn,
-	tagTypes: ["auth", "users", "conversations"],
+	tagTypes: [
+		"auth",
+		"users",
+		"conversations",
+		"members",
+		"messages",
+		"moreMessages",
+	],
 	endpoints: (_builder) => ({}),
 });
 

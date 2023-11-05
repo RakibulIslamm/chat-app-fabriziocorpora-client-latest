@@ -42,7 +42,10 @@ const userApi = apiSlice.injectEndpoints({
 			},
 		}),
 		getMembers: builder.query({
-			query: ({ id, q }) => `/users/select-members?id=${id}&q=${q}`,
+			query: ({ id, q, conversationId }) =>
+				`/users/select-members?id=${id}&q=${q}&conversationId=${conversationId}`,
+			providesTags: ["members"],
+			keepUnusedDataFor: 0,
 		}),
 		editUser: builder.mutation({
 			query: ({ data, id }) => ({

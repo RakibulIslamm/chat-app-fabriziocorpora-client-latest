@@ -10,6 +10,7 @@ import {
 	messageApi,
 	useGetMessagesQuery,
 	useGetMoreMessagesQuery,
+	useSendMessageMutation,
 } from "../../../lib/redux/slices/message/messageApi";
 import { MessageInterface } from "../../../interfaces/message";
 import { ReduxState, useDispatch, useSelector } from "../../../lib/redux/store";
@@ -18,13 +19,23 @@ import {
 	conversationsApi,
 	useGetSingleConversationQuery,
 	useJoinGroupMutation,
+	useUpdateConversationMutation,
 } from "../../../lib/redux/slices/conversation/conversationApi";
 import { UserInterface } from "../../../interfaces/user";
 import { useState, useEffect, useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { conversationOn } from "../../../lib/redux/slices/common/commonSlice";
+import {
+	addMembersOn,
+	conversationOn,
+	groupMembersOn,
+} from "../../../lib/redux/slices/common/commonSlice";
 import { socket } from "../../../utils/socket";
 import Forward from "./Forward/Forward";
+import GroupMembers from "./GroupMembers";
+import AddMembers from "./AddMembers";
+import OutsideClickHandler from "react-outside-click-handler";
+import tinycolor from "tinycolor2";
+import { v4 as uuid } from "uuid";
 
 const Messages = () => {
 	const [reply, setReply] = useState<MessageInterface | null>(null);
@@ -33,14 +44,21 @@ const Messages = () => {
 		null
 	);
 	// const [skip, setSkip] = useState<number>(1);
+	const [loading, setLoading] = useState<boolean>(false);
 	const [hasMore, setHasMore] = useState<boolean>(true);
 	const lastMessageRef = useRef<HTMLDivElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 
 	const { user } = useSelector((state: ReduxState) => state.user);
+	const { groupMembers, addMembers } = useSelector(
+		(state: ReduxState) => state.common
+	);
 	const { secondary, textColor, main } = useColorScheme();
 	const { id } = useParams();
+	const dispatch = useDispatch();
 
+	const [sendMessage] = useSendMessageMutation();
+	const [updateConversation] = useUpdateConversationMutation();
 	const {
 		isLoading,
 		isFetching: messagesFetching,
@@ -51,17 +69,6 @@ const Messages = () => {
 		conversationId: id,
 		userId: user?._id,
 	});
-
-	const [joinGroup, { isLoading: joining }] = useJoinGroupMutation();
-
-	const { isLoading: cLoading, data: conversation } =
-		useGetSingleConversationQuery(id);
-
-	const isMember = conversation?.data?.participants?.some(
-		(m: UserInterface) => m._id === user?._id
-	);
-
-	const dispatch = useDispatch();
 	const {
 		isLoading: moreLoading,
 		isFetching,
@@ -71,6 +78,14 @@ const Messages = () => {
 		skip: data?.data?.length || 10,
 		limit: 20,
 	});
+	const [joinGroup] = useJoinGroupMutation();
+
+	const { isLoading: cLoading, data: conversation } =
+		useGetSingleConversationQuery(id);
+
+	const isMember = conversation?.data?.participants?.some(
+		(m: UserInterface) => m._id === user?._id
+	);
 
 	useEffect(() => {
 		if (data?.data?.length >= data?.count) {
@@ -92,6 +107,9 @@ const Messages = () => {
 						{ conversationId: id, userId: user?._id },
 						(draft) => {
 							draft.data = [...draft.data, ...moreMessages.data];
+							draft.data.sort((x: MessageInterface, y: MessageInterface) => {
+								return new Date(x.timestamp) < new Date(y.timestamp) ? 1 : -1;
+							});
 						}
 					)
 				);
@@ -101,8 +119,25 @@ const Messages = () => {
 	};
 
 	const handleJoin = async () => {
+		setLoading(true);
 		try {
 			const conv = await joinGroup({ id, userId: user?._id });
+			const messageData: Partial<MessageInterface> = {
+				sender: { name: user?.name as string, id: user?._id as string },
+				messageId: uuid(),
+				conversationId: id,
+				message: `${user?.name} has joined the group`,
+				forGroup: true,
+				joinGroup: user?._id,
+				timestamp: Date.now(),
+			};
+			const conversationData = {
+				sender: user?._id,
+				lastMessage: "New user joined the group",
+				img: false,
+				file: false,
+				timestamp: Date.now(),
+			};
 
 			if ("data" in conv && conv.data.success) {
 				dispatch(
@@ -114,11 +149,15 @@ const Messages = () => {
 						}
 					)
 				);
+				await sendMessage(messageData);
+				await updateConversation({ messageData: conversationData, id: id });
 				dispatch(conversationOn());
 			}
 		} catch (err) {
 			// Handle any other errors that may occur during the request
 			console.log(err);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -165,7 +204,7 @@ const Messages = () => {
 	} else if (!isLoading && !isError && data?.data?.length) {
 		content = data?.data?.map((message: MessageInterface) => (
 			<Message
-				key={message._id}
+				key={message.messageId}
 				message={message}
 				setReply={setReply}
 				setForwardMessage={setForwardMessage}
@@ -177,13 +216,13 @@ const Messages = () => {
 	return (
 		<>
 			{!error && (
-				<div className="flex flex-col justify-between w-full h-full relative">
+				<div className="flex flex-col justify-between w-full h-full relative overflow-hidden">
 					<MessageHeader />
 					<div
 						ref={containerRef}
 						onClick={handleClick}
 						id="messagesContainer"
-						className="w-full h-[calc(100%_-_165px)] sm:h-[calc(100%_-_120px)] overflow-y-auto px-[55px] md:px-[20px] sm:px-[15px] flex flex-col-reverse justify-start gap-3 relative lg:scrollbar-thin lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 lg:scrollbar-thumb-rounded-full lg:scrollbar-track-rounded-full"
+						className="w-full h-[calc(100%_-_135px)] sm:h-[calc(100%_-_120px)] overflow-y-auto px-[55px] md:px-[20px] sm:px-[15px] flex flex-col-reverse justify-start gap-3 relative lg:scrollbar-thin lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 lg:scrollbar-thumb-rounded-full lg:scrollbar-track-rounded-full"
 					>
 						{conversation?.data?.deleted ? (
 							<div className="w-full h-full flex justify-center items-center flex-col">
@@ -267,11 +306,12 @@ const Messages = () => {
 						: !cLoading &&
 						  conversation?.data && (
 								<button
+									disabled={loading}
 									onClick={handleJoin}
 									style={{ background: main }}
 									className="px-[55px] md:px-[20px] sm:px-[15px] w-full text-white py-3 flex justify-center items-center text-xl font-semibold"
 								>
-									{joining ? "Joining..." : "Join"}
+									{loading ? "Joining..." : "Join"}
 								</button>
 						  )}
 
@@ -282,6 +322,31 @@ const Messages = () => {
 					>
 						<Forward setForwardOpen={setForwardOpen} message={forwardMessage} />
 					</div>
+
+					{conversation?.data?.isGroup && (
+						<OutsideClickHandler
+							onOutsideClick={() => {
+								dispatch(groupMembersOn(false));
+								dispatch(addMembersOn(false));
+							}}
+						>
+							<div
+								style={{
+									background: tinycolor(secondary).setAlpha(0.7).toRgbString(),
+								}}
+								className={`w-[400px] sm:w-10/12 h-full absolute top-0 right-0 transform ${
+									groupMembers
+										? "translate-x-[0px] shadow-xl"
+										: "translate-x-[400px]"
+								} bg-gray-400 transition-all ease-in-out duration-500 z-50 backdrop-blur p-5 sm:p-3`}
+							>
+								{!addMembers && groupMembers && (
+									<GroupMembers conversation={conversation?.data} />
+								)}
+								{addMembers && groupMembers && <AddMembers />}
+							</div>
+						</OutsideClickHandler>
+					)}
 				</div>
 			)}
 		</>

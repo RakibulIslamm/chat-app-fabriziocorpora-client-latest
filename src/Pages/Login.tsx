@@ -4,6 +4,7 @@ import useColorScheme from "../Hooks/useColorScheme";
 import { useDispatch } from "../lib/redux/store";
 import { setCurrentUser } from "../lib/redux/slices/user/userSlice";
 import { socket } from "../utils/socket";
+import { serverUrl } from "../utils/serverUrl";
 
 const Login = () => {
 	const [value, setValue] = useState("");
@@ -22,16 +23,13 @@ const Login = () => {
 
 		try {
 			setLoading(true);
-			const res = await fetch(
-				"https://chat-app-fabriziocorpora.onrender.com/api/users/login",
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({ username: username }),
-				}
-			);
+			const res = await fetch(`${serverUrl}/api/users/login`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ username: username }),
+			});
 
 			const res_data = await res.json();
 			if (!res_data.success) {

@@ -29,10 +29,12 @@ const Item = ({ item, message }: Props) => {
 		if (!message) return;
 
 		const data = {
+			messageId: message.messageId,
 			sender: { name: user?.name, id: user?._id },
 			conversationId: item?._id,
 			message: message?.message || "",
 			img: message.img || "",
+			file: message.file || "",
 			timestamp: Date.now(),
 			status: "sent",
 		};
@@ -40,6 +42,7 @@ const Item = ({ item, message }: Props) => {
 			sender: user?._id,
 			lastMessage: message.message,
 			img: message?.img ? true : false,
+			file: message?.file ? true : false,
 			timestamp: Date.now(),
 		};
 

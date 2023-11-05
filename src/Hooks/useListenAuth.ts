@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "../lib/redux/store";
 import { setCurrentUser } from "../lib/redux/slices/user/userSlice";
 import { socket } from "../utils/socket";
+import { serverUrl } from "../utils/serverUrl";
 
 const useListenAuth = () => {
 	const dispatch = useDispatch();
@@ -13,7 +14,7 @@ const useListenAuth = () => {
 			try {
 				if (auth) {
 					const res = await fetch(
-						`https://chat-app-fabriziocorpora.onrender.com/api/users/user?username=${auth.username}`
+						`${serverUrl}/api/users/user?username=${auth.username}`
 					);
 					const data = await res.json();
 					socket.emit("new_user", data.data._id);

@@ -10,6 +10,7 @@ import { isJSONValid } from "./utils/isValidJson";
 // import { socket } from "./utils/socket";
 import useListenAuth from "./Hooks/useListenAuth";
 import useColorScheme from "./Hooks/useColorScheme";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
 	// socket.connect();

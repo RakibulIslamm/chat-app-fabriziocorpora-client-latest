@@ -9,7 +9,8 @@ export interface ConversationInterface {
 	participants: [UserInterface];
 	sender: string;
 	lastMessage?: string;
-	img: boolean;
+	img?: boolean;
+	file?: boolean;
 	timestamp: number;
 	deleted: boolean;
 	unseenMessages: number;

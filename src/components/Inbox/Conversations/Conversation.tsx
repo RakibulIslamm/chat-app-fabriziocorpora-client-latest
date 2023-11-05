@@ -33,6 +33,13 @@ const Conversation = ({ conversation }: Props) => {
 		}
 	}, [conversation, user?._id]);
 
+	useEffect(() => {
+		if (conversation.isGroup) {
+			socket.emit("room", conversation?._id);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
 	return (
 		<>
 			{!conversation?.deleted && (
@@ -90,7 +97,7 @@ const Conversation = ({ conversation }: Props) => {
 							</div>
 							<div className={`flex items-center gap-3 font-light`}>
 								<p
-									className={`line-clamp-1 text-[14px] md:text-[13px] w-[calc(100%_-_40px)] opacity-80 ${
+									className={`line-clamp-1 break-all text-[14px] md:text-[13px] w-[calc(100%_-_40px)] opacity-80 ${
 										conversation.sender !== user?._id &&
 										conversation.unseenMessages > 0
 											? "font-bold"

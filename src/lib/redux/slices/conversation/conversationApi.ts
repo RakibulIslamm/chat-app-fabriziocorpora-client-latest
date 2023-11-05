@@ -31,12 +31,52 @@ export const conversationsApi = apiSlice.injectEndpoints({
 			}),
 		}),
 
+		addGroupMembers: builder.mutation({
+			query: ({ conversationId, userIds }) => ({
+				url: `/conversations/add-members?id=${conversationId}`,
+				method: "PUT",
+				body: { userIds: userIds },
+			}),
+			invalidatesTags: ["members"],
+		}),
+
 		updateConversation: builder.mutation({
 			query: ({ messageData, id }) => ({
 				url: `/conversations/${id}`,
 				method: "PUT",
 				body: messageData,
 			}),
+			async onQueryStarted({ messageData, id }, { dispatch, queryFulfilled }) {
+				// console.log(data);
+				const patchResult = dispatch(
+					conversationsApi.util.updateQueryData(
+						"getConversations",
+						messageData.sender,
+						(draft) => {
+							for (const c of draft.data) {
+								if (c._id === id) {
+									c.lastMessage = messageData.lastMessage;
+									c.sender = messageData.sender;
+									c.timestamp = messageData.timestamp;
+									c.img = messageData.img;
+									c.unseenMessages = messageData.unseenMessages;
+									break;
+								}
+							}
+							draft.data.sort(
+								(x: ConversationInterface, y: ConversationInterface) => {
+									return new Date(x.timestamp) < new Date(y.timestamp) ? 1 : -1;
+								}
+							);
+						}
+					)
+				);
+				try {
+					await queryFulfilled;
+				} catch (err) {
+					patchResult.undo();
+				}
+			},
 		}),
 
 		getConversations: builder.query({
@@ -44,20 +84,53 @@ export const conversationsApi = apiSlice.injectEndpoints({
 			// async onQueryStarted(id, { dispatch, queryFulfilled }) {},
 			providesTags: ["conversations"],
 			async onCacheEntryAdded(
-				_id,
+				userId,
 				{ cacheDataLoaded, updateCachedData, cacheEntryRemoved }
 			) {
 				socket.on("conversation", async (data) => {
 					await cacheDataLoaded;
 					const isFound = data.participants.some(
-						(c: UserInterface) => c._id === _id
+						(c: UserInterface) => c._id === userId
 					);
 
 					// const sender = data.sender._id !== id;
 
 					updateCachedData((draft) => {
 						if (isFound) {
-							draft.data.push(data);
+							const isConversationFound = draft.data.some(
+								(conversation: ConversationInterface) =>
+									conversation._id === data?._id
+							);
+							if (!isConversationFound) {
+								draft.data.push(data);
+							}
+						}
+						draft.data.sort(
+							(x: ConversationInterface, y: ConversationInterface) => {
+								return new Date(x.timestamp) < new Date(y.timestamp) ? 1 : -1;
+							}
+						);
+					});
+				});
+
+				socket.on("add-members", async ({ updatedConversation, id }) => {
+					await cacheDataLoaded;
+					const isUserFound = updatedConversation.participants.some(
+						(user: UserInterface) => user._id === userId
+					);
+
+					updateCachedData((draft) => {
+						if (isUserFound) {
+							const hasConversation = draft.data.find(
+								(conversation: ConversationInterface) => conversation._id === id
+							);
+							if (!hasConversation) {
+								draft.data.push(updatedConversation);
+							} else if (hasConversation) {
+								hasConversation.participants = [
+									...updatedConversation.participants,
+								];
+							}
 						}
 						draft.data.sort(
 							(x: ConversationInterface, y: ConversationInterface) => {
@@ -84,20 +157,23 @@ export const conversationsApi = apiSlice.injectEndpoints({
 					await cacheDataLoaded;
 					updateCachedData((draft) => {
 						for (const c of draft.data) {
-							if (c._id === id) {
+							if (c._id === id && data.sender !== userId) {
 								c.lastMessage = data.lastMessage;
 								c.sender = data.sender;
 								c.timestamp = data.timestamp;
 								c.img = data.img;
+								c.file = data.file;
 								c.unseenMessages = data.unseenMessages;
 								break;
 							}
 						}
-						draft.data.sort(
-							(x: ConversationInterface, y: ConversationInterface) => {
-								return new Date(x.timestamp) < new Date(y.timestamp) ? 1 : -1;
-							}
-						);
+						if (data.sender !== userId) {
+							draft.data.sort(
+								(x: ConversationInterface, y: ConversationInterface) => {
+									return new Date(x.timestamp) < new Date(y.timestamp) ? 1 : -1;
+								}
+							);
+						}
 					});
 				});
 
@@ -219,6 +295,17 @@ export const conversationsApi = apiSlice.injectEndpoints({
 					});
 				});
 
+				socket.on("add-members", async ({ updatedConversation, id }) => {
+					await cacheDataLoaded;
+
+					updateCachedData((draft) => {
+						if (id === _id) {
+							draft.data.participants = [...updatedConversation.participants];
+							// console.log(JSON.parse(JSON.stringify(draft.data.participants)));
+						}
+					});
+				});
+
 				socket.on("online", async (id) => {
 					await cacheDataLoaded;
 					updateCachedData((draft) => {
@@ -261,4 +348,5 @@ export const {
 	useJoinGroupMutation,
 	useGetMoreConversationsQuery,
 	useDeleteConversationMutation,
+	useAddGroupMembersMutation,
 } = conversationsApi;

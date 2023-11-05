@@ -13,7 +13,10 @@ import apiSlice from "./slices/api/apiSlice";
 export const reduxStore = configureStore({
 	reducer: rootReducer,
 	middleware: (getDefaultMiddleware) => {
-		return getDefaultMiddleware().concat(apiSlice.middleware);
+		return getDefaultMiddleware({
+			immutableCheck: false,
+			serializableCheck: false,
+		}).concat(apiSlice.middleware);
 	},
 	// devTools: false,
 });
