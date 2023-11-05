@@ -89,6 +89,15 @@ export const messageApi = apiSlice.injectEndpoints({
 						});
 					});
 
+					socket.on("delete-all-messages", async (id) => {
+						await cacheDataLoaded;
+						updateCachedData((draft) => {
+							if (conversationId === id) {
+								draft.data = [];
+							}
+						});
+					});
+
 					socket.on("delivered", async ({ delivered, convId }) => {
 						await cacheDataLoaded;
 						if (convId === conversationId && delivered) {
