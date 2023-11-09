@@ -54,8 +54,7 @@ const MessageFooter = ({
 	const mobileInputRef = useRef<HTMLInputElement | null>(null);
 	const { secondary } = useColorScheme();
 
-	const [sendMessage, { isLoading: sending, isSuccess }] =
-		useSendMessageMutation();
+	const [sendMessage, { isSuccess }] = useSendMessageMutation();
 	const [updateConversation] = useUpdateConversationMutation();
 
 	const {
@@ -137,6 +136,7 @@ const MessageFooter = ({
 		const s = input.replace(/[\s\r\n]+/g, "");
 		if (!s && !imgLink && !fileLink) {
 			inputRef!.current!.focus();
+			mobileInputRef!.current!.focus();
 			return;
 		}
 
@@ -317,7 +317,7 @@ const MessageFooter = ({
 
 				{/* message Input start */}
 				<div
-					className="w-[calc(100%_-_60px)] relative rounded-xl sm:rounded-lg rounded-br-none sm:rounded-br-none px-[55px] border border-[#b4b4b4] dark:border-[#b4b4b44b] outline-none bg-white dark:bg-opacity-10 backdrop-blur-sm dark:text-white"
+					className="w-[calc(100%_-_60px)] relative rounded-xl sm:rounded-lg rounded-br-none sm:rounded-br-none px-[55px] border border-[#b4b4b4] dark:border-[#b4b4b44b] outline-none bg-white dark:bg-opacity-10 backdrop-blur-sm dark:text-white z-50"
 					ref={emojiPickerRef}
 				>
 					<p
@@ -374,6 +374,7 @@ const MessageFooter = ({
 								onEmojiClick={(emojiData) => {
 									setInput((prevInput) => prevInput + emojiData.emoji);
 									inputRef!.current!.innerText += emojiData.emoji;
+									mobileInputRef!.current!.innerText += emojiData.emoji;
 								}}
 							/>
 						</div>
@@ -413,8 +414,8 @@ const MessageFooter = ({
 				<button
 					onClick={handleMessageSend}
 					type="button"
-					className="w-[50px] h-[50px] rounded-full bg-white border border-[#B4B4B4] flex justify-center items-center"
-					disabled={sending || uploading}
+					className="w-[50px] h-[50px] rounded-full bg-white border border-[#B4B4B4] flex justify-center items-center cursor-pointer sm:cursor-auto"
+					disabled={uploading}
 				>
 					<IoIosSend className="text-[#4B4B4B] text-3xl sm:text-2xl" />
 				</button>
@@ -423,7 +424,7 @@ const MessageFooter = ({
 			{Math.abs(scrollPosition) > 300 ? (
 				<button
 					onClick={handleScrollBottom}
-					className="absolute text-2xl bottom-20 left-1/2 transform -translate-x-1/2 p-4 rounded-full bg-black bg-opacity-10 text-gray-500 backdrop-blur"
+					className="absolute text-2xl bottom-20 left-1/2 transform -translate-x-1/2 p-4 rounded-full bg-black bg-opacity-10 text-gray-500 backdrop-blur cursor-pointer sm:cursor-auto"
 				>
 					<AiOutlineArrowDown />
 				</button>

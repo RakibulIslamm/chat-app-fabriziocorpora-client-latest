@@ -36,6 +36,7 @@ const Message = ({
 	const [option, setOption] = useState(false);
 	const [downloading, setDownloading] = useState(false);
 	const [isLightBoxOpen, setIsLightBoxOpen] = useState(false);
+	const [showMessage, setShowMessage] = useState(false);
 
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const { fontSize } = useSelector((state: ReduxState) => state.theme);
@@ -94,9 +95,20 @@ const Message = ({
 		}
 	};
 
+	useEffect(() => {
+		// Trigger animation when the component is mounted
+		setShowMessage(true);
+	}, []);
+
 	return !message.forGroup ? (
 		<div
-			className={`inline-block ${me ? "ml-auto" : "mr-auto"} item relative`}
+			className={`inline-block ${
+				me ? "ml-auto" : "mr-auto"
+			} chat-message transform ${
+				showMessage
+					? "visible opacity-100 transition-all ease-in-out duration-500 item"
+					: "translate-y-[5px] invisible opacity-0"
+			}`}
 			// className={`w-full flex ${me ? "justify-end" : "justify-start"}`}
 		>
 			<div className="inline-block space-y-1 max-w-[600px] md:max-w-[400px] sm:max-w-[350px]">
@@ -424,7 +436,7 @@ const Message = ({
 			</div>
 		</div>
 	) : (
-		<div className="w-full flex justify-center">
+		<div className="w-full flex justify-center item">
 			<p
 				style={{ color: tinycolor(textColor).setAlpha(0.6).toRgbString() }}
 				className="text-base sm:text-sm font-light w-[70%] sm:w-[90%] text-center"

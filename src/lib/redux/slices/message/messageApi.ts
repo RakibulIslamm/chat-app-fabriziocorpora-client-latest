@@ -1,6 +1,6 @@
-import { socket } from "../../../../utils/socket";
 import apiSlice from "../api/apiSlice";
 import { toast } from "react-toastify";
+import { socket } from "../../../../utils/socket";
 
 export const messageApi = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
@@ -18,6 +18,9 @@ export const messageApi = apiSlice.injectEndpoints({
 						{ conversationId: data.conversationId, userId: data.sender.id },
 						(draft) => {
 							draft.data.unshift(data);
+							if (draft.data.length > 32) {
+								draft.data = draft.data.slice(0, 30);
+							}
 						}
 					)
 				);
@@ -68,6 +71,7 @@ export const messageApi = apiSlice.injectEndpoints({
 			query: ({ conversationId }) =>
 				`/messages?conversationId=${conversationId}`,
 			providesTags: ["messages"],
+			keepUnusedDataFor: Infinity,
 			async onCacheEntryAdded(
 				{ conversationId, userId },
 				{ cacheDataLoaded, cacheEntryRemoved, updateCachedData }
@@ -83,10 +87,27 @@ export const messageApi = apiSlice.injectEndpoints({
 								data.sender.id !== userId &&
 								previousId !== data.messageId
 							) {
+								// console.log(data);
+								// console.log(userId);
 								draft.data.unshift(data);
-								previousId = data.messageId;
 							}
+							previousId = data.messageId;
 						});
+
+						/* if (
+							conversationId === data.conversationId &&
+							data.sender.id !== userId
+						) {
+							dispatch(
+								messageApi.util.updateQueryData(
+									"getMessages",
+									{ conversationId: conversationId, userId: userId },
+									(draft) => {
+										draft.data.unshift(data);
+									}
+								)
+							);
+						} */
 					});
 
 					socket.on("delete-all-messages", async (id) => {
@@ -146,9 +167,9 @@ export const messageApi = apiSlice.injectEndpoints({
 					});
 				} catch (err) {
 					console.log(err);
-				} finally {
-					await cacheEntryRemoved;
 				}
+				await cacheEntryRemoved;
+				// socket.off("message");
 			},
 		}),
 		getMoreMessages: builder.query({
@@ -156,6 +177,22 @@ export const messageApi = apiSlice.injectEndpoints({
 			query: ({ conversationId, limit, skip }) =>
 				`/messages/more-messages?conversationId=${conversationId}&limit=${limit}&skip=${skip}`,
 			providesTags: ["moreMessages"],
+
+			async onCacheEntryAdded(
+				{ conversationId },
+				{ cacheDataLoaded, cacheEntryRemoved, updateCachedData }
+			) {
+				await cacheDataLoaded;
+				socket.on("delete-all-messages", async (id) => {
+					await cacheDataLoaded;
+					updateCachedData((draft) => {
+						if (conversationId === id) {
+							draft.data = [];
+						}
+					});
+				});
+				await cacheEntryRemoved;
+			},
 		}),
 		uploadFile: builder.mutation({
 			query: (data) => ({
@@ -175,3 +212,92 @@ export const {
 	useUploadFileMutation,
 	useDeleteAllMessageMutation,
 } = messageApi;
+
+/* 
+
+socket.on("message", async (data) => {
+						console.log(data);
+						await cacheDataLoaded;
+						updateCachedData((draft) => {
+							if (
+								conversationId === data.conversationId &&
+								data.sender.id !== userId
+							) {
+								draft.data.unshift(data);
+							}
+						});
+
+						if (
+							conversationId === data.conversationId &&
+							data.sender.id !== userId
+						) {
+							dispatch(
+								messageApi.util.updateQueryData(
+									"getMessages",
+									{ conversationId: conversationId, userId: userId },
+									(draft) => {
+										draft.data.unshift(data);
+									}
+								)
+							);
+						}
+					});
+
+					socket.on("delete-all-messages", async (id) => {
+						await cacheDataLoaded;
+						updateCachedData((draft) => {
+							if (conversationId === id) {
+								draft.data = [];
+							}
+						});
+					});
+
+					socket.on("delivered", async ({ delivered, convId }) => {
+						await cacheDataLoaded;
+						if (convId === conversationId && delivered) {
+							updateCachedData((draft) => {
+								for (const message of draft.data) {
+									if (
+										message.conversationId === convId &&
+										message.status === "sent"
+									) {
+										message.status = "delivered";
+									}
+								}
+							});
+						}
+					});
+
+					socket.on("seen-m", async ({ message, id }) => {
+						await cacheDataLoaded;
+						if (
+							message.conversationId === conversationId &&
+							message.status === "seen"
+						) {
+							updateCachedData((draft) => {
+								for (const m of draft.data) {
+									if (m._id === id) {
+										m.status = "seen";
+										m.seen = message.seen;
+									}
+								}
+							});
+						}
+					});
+
+					socket.on("delete-message", async (data) => {
+						await cacheDataLoaded;
+						updateCachedData((draft) => {
+							for (const message of draft.data) {
+								if (message._id === data._id) {
+									message.deleted = true;
+									return;
+								}
+							}
+
+							// const filteredMsg = draft.data?.filter((message:MessageInterface)=>message._id !== data._id)
+						});
+					});
+
+
+*/

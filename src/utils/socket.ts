@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 import { serverUrl } from "./serverUrl";
-const connectionOptions = {
+export const connectionOptions = {
 	forceNew: true,
 	reconnectionAttempts: Infinity,
 	timeout: 10000,

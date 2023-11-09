@@ -83,6 +83,7 @@ export const conversationsApi = apiSlice.injectEndpoints({
 			query: (id) => `/conversations?id=${id}`,
 			// async onQueryStarted(id, { dispatch, queryFulfilled }) {},
 			providesTags: ["conversations"],
+			keepUnusedDataFor: Infinity,
 			async onCacheEntryAdded(
 				userId,
 				{ cacheDataLoaded, updateCachedData, cacheEntryRemoved }
@@ -167,7 +168,7 @@ export const conversationsApi = apiSlice.injectEndpoints({
 								break;
 							}
 						}
-						if (data.sender !== userId) {
+						if (data?.sender !== userId) {
 							draft.data.sort(
 								(x: ConversationInterface, y: ConversationInterface) => {
 									return new Date(x.timestamp) < new Date(y.timestamp) ? 1 : -1;
@@ -249,6 +250,7 @@ export const conversationsApi = apiSlice.injectEndpoints({
 
 		getSingleConversation: builder.query({
 			query: (id) => `/conversations/conversation/${id}`,
+			keepUnusedDataFor: Infinity,
 			async onCacheEntryAdded(
 				_id,
 				{ cacheDataLoaded, updateCachedData, cacheEntryRemoved }

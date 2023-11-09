@@ -7,6 +7,7 @@ import Login from "../Pages/Login";
 import PublicLayout from "../Layout/Public/PublicLayout";
 import PublicRoute from "./PublicRoute";
 import Register from "../Pages/Register";
+import NotFound from "../Pages/NotFound";
 
 export const router = createBrowserRouter([
 	{
@@ -52,5 +53,9 @@ export const router = createBrowserRouter([
 				element: <Register />,
 			},
 		],
+	},
+	{
+		path: "*",
+		element: <NotFound />,
 	},
 ]);

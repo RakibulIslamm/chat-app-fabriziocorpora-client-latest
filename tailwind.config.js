@@ -22,6 +22,9 @@ export default {
 				md: { min: "600px", max: "1024px" },
 				lg: { min: "1025px" },
 			},
+			transitionProperty: {
+				height: "height",
+			},
 		},
 	},
 	// eslint-disable-next-line no-undef, @typescript-eslint/no-var-requires

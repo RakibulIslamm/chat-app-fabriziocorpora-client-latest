@@ -4,7 +4,6 @@ export interface MessageInterface {
 	_id?: string;
 	messageId: string;
 	sender: { name: string; id: string };
-	receiver: UserInterface;
 	conversationId: string;
 	message: string;
 	img?: string;

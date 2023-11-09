@@ -73,8 +73,9 @@ function App() {
 		>
 			<div
 				style={{
-					border: `1px solid ${textColor}`,
-					borderTop: "transparent",
+					borderLeft: `1px solid ${textColor}`,
+					borderTop: `1px solid ${textColor}`,
+					borderRight: `1px solid ${textColor}`,
 				}}
 				className="animate-spin rounded-full h-20 w-20"
 			></div>
