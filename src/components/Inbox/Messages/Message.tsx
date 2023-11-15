@@ -19,6 +19,7 @@ import { Captions } from "yet-another-react-lightbox/plugins";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import { AiOutlineDownload, AiOutlineFile } from "react-icons/ai";
 import { serverUrl } from "../../../utils/serverUrl";
+import { MdCall, MdCallMade, MdCallReceived, MdVideocam } from "react-icons/md";
 
 type Props = {
 	message: MessageInterface;
@@ -144,6 +145,58 @@ const Message = ({
 							</p>
 						) : (
 							<div>
+								{message.isCall && (
+									<div
+										style={{
+											background: `${me ? main : secondary}`,
+											fontSize: fontSize,
+										}}
+										className={`px-5 sm:px-3 py-3 sm:py-2 rounded-lg sm:rounded-md ${
+											me
+												? " text-white rounded-br-none sm:rounded-br-none"
+												: "rounded-bl-none sm:rounded-bl-none dark:text-gray-100"
+										} shadow-xl relative font-normal break-words message space-y-2`}
+									>
+										<div className="flex items-center gap-8 sm:gap-4">
+											<div className="space-y-1">
+												<p>
+													{message.sender.id === user?._id
+														? "Outgoing"
+														: "Incoming"}{" "}
+													<span className="capitalize">
+														{message.callInfo?.callType}
+													</span>{" "}
+													Call
+												</p>
+												<div className="flex items-center gap-2">
+													<div className="text-sm">
+														{!me && <MdCallReceived />}
+														{me && <MdCallMade />}
+													</div>
+													<p className=" font-light text-xs">
+														{message?.callInfo?.callTime?.h
+															?.toString()
+															.padStart(2, "0")}
+														:
+														{message?.callInfo?.callTime?.m
+															?.toString()
+															.padStart(2, "0")}
+														:
+														{message?.callInfo?.callTime?.s
+															?.toString()
+															.padStart(2, "0")}
+													</p>
+												</div>
+											</div>
+											<div className="text-2xl">
+												{message.callInfo?.callType === "video" && (
+													<MdVideocam />
+												)}
+												{message.callInfo?.callType === "audio" && <MdCall />}
+											</div>
+										</div>
+									</div>
+								)}
 								{message?.replyTo &&
 									(message.replyTo.img ? (
 										<p
@@ -342,7 +395,7 @@ const Message = ({
 							option ? "visible" : "invisible"
 						}`}
 					>
-						{!message.deleted && (
+						{!message.deleted && !message.isCall && (
 							<div
 								className={`flex items-center gap-3 ${
 									me && "flex-row-reverse"
@@ -418,7 +471,7 @@ const Message = ({
 						} dark:text-gray-500 z-0`}
 					>
 						<p className="text-[13px]">{date}</p>
-						{message?.sender?.id === user?._id && (
+						{message?.sender?.id === user?._id && !message.isCall && (
 							<>
 								{message.status === "delivered" && (
 									<IoCheckmarkDoneOutline className="text-[16px] text-gray-600" />

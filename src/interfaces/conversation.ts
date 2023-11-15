@@ -3,6 +3,11 @@ import { UserInterface } from "./user";
 export interface ConversationInterface {
 	_id?: string;
 	isGroup: true | false;
+	isCall?: boolean;
+	callInfo?: {
+		isGroupCall: boolean;
+		callType: string;
+	};
 	groupName?: string;
 	groupCreator?: UserInterface;
 	groupColor?: string;

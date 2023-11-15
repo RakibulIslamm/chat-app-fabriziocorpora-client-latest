@@ -36,6 +36,9 @@ import AddMembers from "./AddMembers";
 import OutsideClickHandler from "react-outside-click-handler";
 import tinycolor from "tinycolor2";
 import { v4 as uuid } from "uuid";
+import IncomingCall from "./Call/IncomingCall";
+import OutgoingCall from "./Call/OutgoingCall";
+import MeetPage from "./Call/jitsi/MeetPage";
 
 const Messages = () => {
 	const [reply, setReply] = useState<MessageInterface | null>(null);
@@ -53,6 +56,12 @@ const Messages = () => {
 	const { groupMembers, addMembers } = useSelector(
 		(state: ReduxState) => state.common
 	);
+	const {
+		incomingCall: incoming,
+		outgoingCall: outgoing,
+		callAnswered,
+	} = useSelector((state: ReduxState) => state.call);
+
 	const { secondary, textColor, main } = useColorScheme();
 	const { id } = useParams();
 	const dispatch = useDispatch();
@@ -347,6 +356,10 @@ const Messages = () => {
 							</div>
 						</OutsideClickHandler>
 					)}
+
+					{outgoing && !callAnswered && <OutgoingCall />}
+					{incoming && !callAnswered && <IncomingCall />}
+					{(incoming || outgoing) && callAnswered && <MeetPage />}
 				</div>
 			)}
 		</>
