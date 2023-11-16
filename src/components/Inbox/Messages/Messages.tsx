@@ -36,9 +36,11 @@ import AddMembers from "./AddMembers";
 import OutsideClickHandler from "react-outside-click-handler";
 import tinycolor from "tinycolor2";
 import { v4 as uuid } from "uuid";
-import IncomingCall from "./Call/IncomingCall";
-import OutgoingCall from "./Call/OutgoingCall";
-import MeetPage from "./Call/jitsi/MeetPage";
+import { IncomingCallInfoType } from "../../../interfaces/callInfo";
+import {
+	incomingCall,
+	setCallAnswered,
+} from "../../../lib/redux/slices/call/callSlice";
 
 const Messages = () => {
 	const [reply, setReply] = useState<MessageInterface | null>(null);
@@ -46,6 +48,8 @@ const Messages = () => {
 	const [forwardMessage, setForwardMessage] = useState<MessageInterface | null>(
 		null
 	);
+	const [currentGroupCall, setCurrentGroupCall] =
+		useState<Partial<IncomingCallInfoType> | null>(null);
 	// const [skip, setSkip] = useState<number>(1);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [hasMore, setHasMore] = useState<boolean>(true);
@@ -56,11 +60,6 @@ const Messages = () => {
 	const { groupMembers, addMembers } = useSelector(
 		(state: ReduxState) => state.common
 	);
-	const {
-		incomingCall: incoming,
-		outgoingCall: outgoing,
-		callAnswered,
-	} = useSelector((state: ReduxState) => state.call);
 
 	const { secondary, textColor, main } = useColorScheme();
 	const { id } = useParams();
@@ -104,6 +103,31 @@ const Messages = () => {
 			setHasMore(true);
 		}
 	}, [data]);
+
+	useEffect(() => {
+		setCurrentGroupCall(null);
+		const listener = (callInformation: Partial<IncomingCallInfoType>) => {
+			if (callInformation.callInfo?.room === id) {
+				setCurrentGroupCall(callInformation);
+			}
+		};
+		socket.on("group-call", listener);
+
+		return () => {
+			socket.off("group-call", listener);
+		};
+	}, [id]);
+
+	useEffect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const listener = (_hangupUser: UserInterface) => {
+			setCurrentGroupCall(null);
+		};
+		socket.on("callEnd", listener);
+		return () => {
+			socket.off("callEnd", listener);
+		};
+	}, []);
 
 	const fetchMoreData = () => {
 		if (moreLoading || isFetching) {
@@ -170,6 +194,25 @@ const Messages = () => {
 		}
 	};
 
+	const handleJoinCall = () => {
+		if (currentGroupCall) {
+			const receiver = currentGroupCall.participants?.find(
+				(p: UserInterface) => p._id === user?._id
+			);
+			dispatch(
+				incomingCall({
+					caller: currentGroupCall.caller,
+					participants: currentGroupCall.participants,
+					callInfo: currentGroupCall.callInfo,
+				})
+			);
+			dispatch(setCallAnswered());
+			socket.emit("receiveSignal", receiver);
+		} else {
+			alert("Call ended");
+		}
+	};
+
 	const handleClick = () => {
 		if (
 			conversation?.data?.unseenMessages > 0 &&
@@ -225,7 +268,7 @@ const Messages = () => {
 	return (
 		<>
 			{!error && (
-				<div className="flex flex-col justify-between w-full h-full relative overflow-hidden">
+				<div className="flex flex-col justify-between w-full h-full relative overflow-hidden z-40">
 					<MessageHeader />
 					<div
 						ref={containerRef}
@@ -267,6 +310,26 @@ const Messages = () => {
 								}
 							>
 								<span id="anchor" ref={lastMessageRef}></span>
+								{currentGroupCall?.callInfo?.isGroupCall && (
+									<div className="w-full flex justify-center">
+										<button
+											style={{ background: secondary, color: textColor }}
+											className="px-8 py-2 border border-red-500 rounded-lg relative"
+											onClick={handleJoinCall}
+										>
+											<span className="absolute flex h-3 w-3 -top-1 -right-1">
+												<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+												<span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+											</span>
+											<span className="relative">
+												<span className="absolute animate-ping opacity-75 blur-sm text-red-400">
+													Join call
+												</span>
+												<span>Calling....</span>
+											</span>
+										</button>
+									</div>
+								)}
 								{content}
 							</InfiniteScroll>
 						)}
@@ -356,10 +419,6 @@ const Messages = () => {
 							</div>
 						</OutsideClickHandler>
 					)}
-
-					{outgoing && !callAnswered && <OutgoingCall />}
-					{incoming && !callAnswered && <IncomingCall />}
-					{(incoming || outgoing) && callAnswered && <MeetPage />}
 				</div>
 			)}
 		</>

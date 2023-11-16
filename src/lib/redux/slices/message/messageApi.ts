@@ -51,6 +51,14 @@ export const messageApi = apiSlice.injectEndpoints({
 			},
 		}),
 
+		updateMessage: builder.mutation({
+			query: ({ id, data }) => ({
+				url: `/messages/update-group-call-message/${id}`,
+				method: "PUT",
+				body: data,
+			}),
+		}),
+
 		deleteMessage: builder.mutation({
 			query: (id) => ({
 				url: `/messages/delete-message/${id}`,
@@ -211,93 +219,5 @@ export const {
 	useGetMoreMessagesQuery,
 	useUploadFileMutation,
 	useDeleteAllMessageMutation,
+	useUpdateMessageMutation,
 } = messageApi;
-
-/* 
-
-socket.on("message", async (data) => {
-						console.log(data);
-						await cacheDataLoaded;
-						updateCachedData((draft) => {
-							if (
-								conversationId === data.conversationId &&
-								data.sender.id !== userId
-							) {
-								draft.data.unshift(data);
-							}
-						});
-
-						if (
-							conversationId === data.conversationId &&
-							data.sender.id !== userId
-						) {
-							dispatch(
-								messageApi.util.updateQueryData(
-									"getMessages",
-									{ conversationId: conversationId, userId: userId },
-									(draft) => {
-										draft.data.unshift(data);
-									}
-								)
-							);
-						}
-					});
-
-					socket.on("delete-all-messages", async (id) => {
-						await cacheDataLoaded;
-						updateCachedData((draft) => {
-							if (conversationId === id) {
-								draft.data = [];
-							}
-						});
-					});
-
-					socket.on("delivered", async ({ delivered, convId }) => {
-						await cacheDataLoaded;
-						if (convId === conversationId && delivered) {
-							updateCachedData((draft) => {
-								for (const message of draft.data) {
-									if (
-										message.conversationId === convId &&
-										message.status === "sent"
-									) {
-										message.status = "delivered";
-									}
-								}
-							});
-						}
-					});
-
-					socket.on("seen-m", async ({ message, id }) => {
-						await cacheDataLoaded;
-						if (
-							message.conversationId === conversationId &&
-							message.status === "seen"
-						) {
-							updateCachedData((draft) => {
-								for (const m of draft.data) {
-									if (m._id === id) {
-										m.status = "seen";
-										m.seen = message.seen;
-									}
-								}
-							});
-						}
-					});
-
-					socket.on("delete-message", async (data) => {
-						await cacheDataLoaded;
-						updateCachedData((draft) => {
-							for (const message of draft.data) {
-								if (message._id === data._id) {
-									message.deleted = true;
-									return;
-								}
-							}
-
-							// const filteredMsg = draft.data?.filter((message:MessageInterface)=>message._id !== data._id)
-						});
-					});
-
-
-*/

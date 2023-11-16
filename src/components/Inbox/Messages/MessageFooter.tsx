@@ -157,6 +157,7 @@ const MessageFooter = ({
 			replyTo: reply,
 		};
 		const conversationData = {
+			isCall: false,
 			sender: user?._id,
 			lastMessage: input,
 			img: imgLink ? true : false,

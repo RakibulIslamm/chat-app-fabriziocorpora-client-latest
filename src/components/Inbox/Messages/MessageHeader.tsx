@@ -2,7 +2,6 @@
 import { BiDotsVerticalRounded } from "react-icons/bi";
 import { FiArrowLeft } from "react-icons/fi";
 import { useDispatch } from "react-redux";
-import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { conversationOptionsOn } from "../../../lib/redux/slices/common/commonSlice";
 import { ReduxState, useSelector } from "../../../lib/redux/store";
@@ -14,31 +13,14 @@ import useColorScheme from "../../../Hooks/useColorScheme";
 import tinycolor from "tinycolor2";
 import { PiVideoCamera } from "react-icons/pi";
 import { MdOutlineCall } from "react-icons/md";
-import {
-	CallInfoType,
-	IncomingCallInfoType,
-} from "../../../interfaces/callInfo";
-import {
-	callEnd,
-	incomingCall,
-	lineBusy,
-	outgoingCall,
-	ringing,
-	setCallAnswered,
-} from "../../../lib/redux/slices/call/callSlice";
-import { socket } from "../../../utils/socket";
+import { CallInfoType } from "../../../interfaces/callInfo";
+import { outgoingCall } from "../../../lib/redux/slices/call/callSlice";
 
 const MessageHeader = () => {
 	const navigate = useNavigate();
 	const { conversationOptions } = useSelector(
 		(state: ReduxState) => state.common
 	);
-	const {
-		callInformation,
-		callAnswered,
-		incomingCall: incoming,
-		outgoingCall: outgoing,
-	} = useSelector((state: ReduxState) => state.call);
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const { id } = useParams();
 	const dispatch = useDispatch();
@@ -61,131 +43,23 @@ const MessageHeader = () => {
 
 	// const { call } = useCalling();
 
+	//* Make a new call
 	const handleCall = (callType: string) => {
-		if (conversation?.isGroup) {
-			console.log("Group call will send from here");
-		} else {
-			const callInfo: CallInfoType = {
-				callType: (callType as "audio") || "video",
-				isGroupCall: false,
-				room: conversation?._id,
-			};
-			dispatch(
-				outgoingCall({
-					caller: user,
-					receiver: participant,
-					callInfo: callInfo,
-				})
-			);
-		}
+		const callInfo: CallInfoType = {
+			callType: (callType as "audio") || "video",
+			isGroupCall: conversation?.isGroup,
+			room: conversation?._id,
+			groupName: conversation?.groupName || "",
+		};
+		dispatch(
+			outgoingCall({
+				caller: user,
+				callInfo: callInfo,
+				participants: conversation?.participants,
+			})
+		);
+		// call(callInfo, participant);
 	};
-
-	useEffect(() => {
-		const listener = ({ caller, receiver, callInfo }: IncomingCallInfoType) => {
-			// console.log(incoming, outgoing, callAnswered);
-			if (receiver?._id === user?._id && user?._id !== caller?._id) {
-				if (incoming || outgoing || callAnswered) {
-					console.log("Line busy sent");
-					socket.emit("lineBusy", { receiver, caller: caller });
-				} else if (
-					!incoming &&
-					!outgoing &&
-					!callAnswered &&
-					!callInformation?.receiver._id
-				) {
-					console.log("incoming call....");
-					dispatch(incomingCall({ caller, receiver, callInfo }));
-				}
-			}
-		};
-
-		socket.on("callSignal", listener);
-
-		return () => {
-			socket.off("callSignal", listener);
-		};
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [callAnswered, incoming, outgoing, user]);
-
-	useEffect(() => {
-		let interval: ReturnType<typeof setInterval>;
-		const listener = ({ receiver, caller }: Partial<IncomingCallInfoType>) => {
-			if (
-				receiver?._id === callInformation?.receiver._id &&
-				callInformation?.caller?._id === caller?._id
-			) {
-				console.log("Line busy received....");
-				dispatch(lineBusy());
-
-				interval = setInterval(() => {
-					dispatch(callEnd());
-				}, 3000);
-			}
-		};
-
-		socket.on("lineBusy", listener);
-
-		return () => {
-			socket.off("lineBusy", listener);
-			clearInterval(interval);
-		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [callInformation?.receiver]);
-
-	useEffect(() => {
-		const listener = (receiver: UserInterface) => {
-			if (receiver._id === callInformation?.receiver._id) {
-				console.log("Ringing....");
-				dispatch(ringing());
-			}
-		};
-
-		socket.on("receiveSignal", listener);
-
-		return () => {
-			socket.off("receiveSignal", listener);
-		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [callInformation?.receiver]);
-
-	useEffect(() => {
-		const listener = ({ receiver, caller }: Partial<IncomingCallInfoType>) => {
-			if (
-				receiver?._id === callInformation?.receiver._id &&
-				caller?._id === callInformation?.caller?._id
-			) {
-				console.log("Call Answered");
-				dispatch(setCallAnswered());
-			}
-		};
-
-		socket.on("callAnswered", listener);
-
-		return () => {
-			socket.off("callAnswered", listener);
-		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [callInformation?.receiver, callInformation]);
-
-	useEffect(() => {
-		const listener = ({ receiver, caller }: Partial<IncomingCallInfoType>) => {
-			if (
-				receiver?._id === callInformation?.receiver._id &&
-				caller?._id === callInformation?.caller?._id
-			) {
-				console.log("Call ended");
-				dispatch(callEnd());
-			}
-		};
-
-		socket.on("callEnd", listener);
-
-		return () => {
-			socket.off("callEnd", listener);
-		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [callInformation?.receiver, callInformation]);
 
 	let content;
 

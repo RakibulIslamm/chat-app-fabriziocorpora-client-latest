@@ -44,14 +44,13 @@ const callSlice = createSlice({
 			state.callInformation = action.payload;
 			socket.emit("sendSignal", {
 				caller: action.payload.caller,
-				receiver: action.payload.receiver,
+				participants: action.payload.participants,
 				callInfo: action.payload.callInfo,
 			});
 		},
 		incomingCall: (state, action) => {
 			state.incomingCall = true;
 			state.callInformation = action.payload;
-			socket.emit("receiveSignal", action.payload.receiver);
 		},
 		setCallInfo: (state, action) => {
 			state.callInformation = action.payload;

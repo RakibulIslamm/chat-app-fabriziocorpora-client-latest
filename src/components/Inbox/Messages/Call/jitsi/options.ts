@@ -1,0 +1,106 @@
+export const overwriteOptionForCall = {
+	disableSelfView: false,
+	hideConferenceTimer: false,
+	disableModeratorIndicator: true,
+	hideConferenceSubject: true,
+	defaultRemoteDisplayName: "Anonymous",
+	defaultLocalDisplayName: "me",
+	enableWelcomePage: false,
+	enableClosePage: false,
+	disableDeepLinking: true,
+	prejoinConfig: {
+		enabled: false,
+	},
+	conferenceInfo: {
+		// autoHide: ["subject"],
+	},
+	toolbarButtons: [
+		"camera",
+		"toggle-camera",
+		"microphone",
+		"toggle-microphone",
+		"fullscreen",
+		"hangup",
+	],
+	buttonsWithNotifyClick: ["hangup", "hangup-menu"],
+	toolbarConfig: {
+		alwaysVisible: true,
+	},
+	filmstrip: {
+		disabled: true,
+	},
+	notifications: [
+		"dialog.cameraConstraintFailedError",
+		"dialog.screenSharingFailedTitle",
+	],
+	logging: {
+		defaultLogLevel: "error",
+	},
+	apiLogLevels: ["error"],
+};
+
+export const overwriteOptionForGroupCall = {
+	disableSelfView: false,
+	hideConferenceTimer: false,
+	disableModeratorIndicator: false,
+	// hideConferenceSubject: true,
+	defaultRemoteDisplayName: "Anonymous",
+	defaultLocalDisplayName: "me",
+	enableWelcomePage: false,
+	enableClosePage: false,
+	disableDeepLinking: true,
+	prejoinConfig: {
+		enabled: false,
+	},
+	buttonsWithNotifyClick: ["hangup", "hangup-menu"],
+	toolbarConfig: {
+		alwaysVisible: true,
+	},
+	toolbarButtons: [
+		"camera",
+		"chat",
+		"closedcaptions",
+		"desktop",
+		"etherpad",
+		"feedback",
+		"filmstrip",
+		"fullscreen",
+		"hangup",
+		"help",
+		"highlight",
+		"livestreaming",
+		"microphone",
+		"noisesuppression",
+		"participants-pane",
+		"profile",
+		"raisehand",
+		"recording",
+		"security",
+		"select-background",
+		"settings",
+		"shortcuts",
+		"tileview",
+		"toggle-camera",
+		"videoquality",
+		"whiteboard",
+	],
+	notifications: [
+		"dialog.cameraConstraintFailedError",
+		"dialog.screenSharingFailedTitle",
+		"dialog.recording",
+		"notify.leftOneMember",
+		"notify.leftThreePlusMembers",
+		"notify.leftTwoMembers",
+	],
+	logging: {
+		defaultLogLevel: "error",
+	},
+	apiLogLevels: ["error"],
+};
+
+export const interfaceConfigOverwrite = {
+	SHOW_JITSI_WATERMARK: false,
+	HIDE_DEEP_LINKING_LOGO: true,
+	SHOW_BRAND_WATERMARK: false,
+	SHOW_WATERMARK_FOR_GUESTS: false,
+};

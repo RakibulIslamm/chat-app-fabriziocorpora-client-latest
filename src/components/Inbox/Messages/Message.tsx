@@ -173,19 +173,31 @@ const Message = ({
 														{!me && <MdCallReceived />}
 														{me && <MdCallMade />}
 													</div>
-													<p className=" font-light text-xs">
-														{message?.callInfo?.callTime?.h
-															?.toString()
-															.padStart(2, "0")}
-														:
-														{message?.callInfo?.callTime?.m
-															?.toString()
-															.padStart(2, "0")}
-														:
-														{message?.callInfo?.callTime?.s
-															?.toString()
-															.padStart(2, "0")}
-													</p>
+													{message?.callInfo?.callTime?.h ||
+													message?.callInfo?.callTime?.m ||
+													message?.callInfo?.callTime?.s ? (
+														<p className=" font-light text-xs">
+															{message?.callInfo?.callTime?.h
+																?.toString()
+																.padStart(2, "0")}
+															:
+															{message?.callInfo?.callTime?.m
+																?.toString()
+																.padStart(2, "0")}
+															:
+															{message?.callInfo?.callTime?.s
+																?.toString()
+																.padStart(2, "0")}
+														</p>
+													) : (
+														<p
+															className={`font-light text-xs ${
+																me ? "text-white" : "text-red-500"
+															}`}
+														>
+															Missed call
+														</p>
+													)}
 												</div>
 											</div>
 											<div className="text-2xl">

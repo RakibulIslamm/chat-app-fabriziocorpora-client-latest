@@ -59,6 +59,7 @@ export const conversationsApi = apiSlice.injectEndpoints({
 									c.sender = messageData.sender;
 									c.timestamp = messageData.timestamp;
 									c.img = messageData.img;
+									c.isCall = messageData.isCall;
 									c.unseenMessages = messageData.unseenMessages;
 									break;
 								}
@@ -164,6 +165,7 @@ export const conversationsApi = apiSlice.injectEndpoints({
 								c.timestamp = data.timestamp;
 								c.img = data.img;
 								c.file = data.file;
+								c.isCall = data.isCall;
 								c.unseenMessages = data.unseenMessages;
 								break;
 							}

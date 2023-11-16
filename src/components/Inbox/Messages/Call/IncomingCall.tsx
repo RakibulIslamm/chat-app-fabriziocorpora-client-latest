@@ -15,15 +15,20 @@ const IncomingCall = () => {
 	const { callInformation, lineBusy: busy } = useSelector(
 		(state: ReduxState) => state.call
 	);
+	const { user } = useSelector((state: ReduxState) => state.user);
 	const { secondary, textColor } = useColorScheme();
 	const dispatch = useDispatch();
+
 	const handleCallAnswered = () => {
-		socket.emit("callAnswered", callInformation);
+		socket.emit("callAnswered", {
+			caller: callInformation?.caller,
+			receiver: user,
+		});
 		dispatch(setCallAnswered());
 	};
 
 	const handleCallEnd = () => {
-		socket.emit("callEnd", callInformation);
+		socket.emit("callEnd", user);
 		dispatch(callEnd());
 	};
 
@@ -45,7 +50,7 @@ const IncomingCall = () => {
 				<div className="flex flex-col items-center gap-2">
 					<div
 						style={{
-							background: callInformation?.receiver?.color || "pink",
+							background: callInformation?.caller?.color || "pink",
 							color: textColor,
 						}}
 						className="w-[115px] h-[115px] rounded-full flex justify-center items-center relative"
@@ -71,16 +76,6 @@ const IncomingCall = () => {
 							<button
 								className="p-4 rounded-full bg-red-500 text-white text-2xl"
 								onClick={handleCallEnd}
-							>
-								<MdCallEnd />
-							</button>
-						</div>
-					)}
-					{busy && (
-						<div className="flex items-center gap-3">
-							<button
-								className="p-4 rounded-full bg-red-500 text-white text-2xl"
-								onClick={() => dispatch(callEnd())}
 							>
 								<MdCallEnd />
 							</button>

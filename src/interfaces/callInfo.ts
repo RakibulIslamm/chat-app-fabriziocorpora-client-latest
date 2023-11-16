@@ -10,5 +10,6 @@ export type CallInfoType = {
 export type IncomingCallInfoType = {
 	callInfo: CallInfoType;
 	caller: UserInterface;
-	receiver: UserInterface | [UserInterface];
+	receiver?: UserInterface;
+	participants: [UserInterface];
 };

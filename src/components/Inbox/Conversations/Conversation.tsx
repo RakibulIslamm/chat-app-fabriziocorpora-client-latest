@@ -83,13 +83,13 @@ const Conversation = ({ conversation }: Props) => {
 							>
 								<p
 									className={`text-[16px] line-clamp-1 ${
-										conversation.sender !== user?._id &&
-										conversation.unseenMessages > 0
+										conversation?.sender !== user?._id &&
+										conversation?.unseenMessages > 0
 											? "font-bold"
 											: ""
 									}`}
 								>
-									{conversation.isGroup ? conversationName : participant?.name}
+									{conversation?.isGroup ? conversationName : participant?.name}
 								</p>
 								<small className="inline-block min-w-fit md:text-xs">
 									{date}
@@ -108,6 +108,14 @@ const Conversation = ({ conversation }: Props) => {
 										? conversation.sender === user?._id
 											? "You send an image"
 											: "You receive an image"
+										: conversation.file
+										? conversation.sender === user?._id
+											? "You send a file"
+											: "You receive a file"
+										: conversation.isCall
+										? conversation.sender === user?._id
+											? "Outgoing Call"
+											: "Incoming Call"
 										: conversation.lastMessage
 										? conversation.lastMessage
 										: "You are connected to message each other"}

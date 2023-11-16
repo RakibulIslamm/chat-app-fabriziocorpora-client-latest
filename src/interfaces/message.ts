@@ -6,9 +6,9 @@ export interface MessageInterface {
 	sender: { name: string; id: string };
 	isCall?: boolean;
 	callInfo?: {
-		callTime: { h: number; m: number; s: number };
-		isGroupCall: boolean;
-		callType: string;
+		callTime?: { h: number; m: number; s: number };
+		isGroupCall?: boolean;
+		callType?: string;
 	};
 	conversationId: string;
 	message: string;

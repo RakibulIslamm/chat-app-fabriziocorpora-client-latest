@@ -1,4 +1,4 @@
-import { ReduxState, useSelector } from "../lib/redux/store";
+import { ReduxState, useDispatch, useSelector } from "../lib/redux/store";
 import Conversations from "../components/Inbox/Conversations/Conversations";
 import { Outlet, useMatch } from "react-router-dom";
 import NewGroup from "../components/NewChatOptions/NewGroup/NewGroup";
@@ -8,6 +8,21 @@ import useColorScheme from "../Hooks/useColorScheme";
 import tinycolor from "tinycolor2";
 import { socket } from "../utils/socket";
 import { useEffect } from "react";
+import { IncomingCallInfoType } from "../interfaces/callInfo";
+import { UserInterface } from "../interfaces/user";
+import {
+	callEnd,
+	incomingCall,
+	lineBusy,
+	ringing,
+	setCallAnswered,
+} from "../lib/redux/slices/call/callSlice";
+import OutgoingCall from "../components/Inbox/Messages/Call/OutgoingCall";
+import IncomingCall from "../components/Inbox/Messages/Call/IncomingCall";
+import MeetPage from "../components/Inbox/Messages/Call/jitsi/MeetPage";
+import dialTone from "../audio/dial_tone.mp3";
+import waiting from "../audio/waiting.mp3";
+import incomingCallRing from "../audio/ringing.mp3";
 
 // type Props = {};
 
@@ -20,6 +35,14 @@ const Index = () => {
 	const match = useMatch("/messages/:id");
 	const { primary, secondary } = useColorScheme();
 	const bg = tinycolor(secondary).setAlpha(0.8).toRgbString();
+	const dispatch = useDispatch();
+	const {
+		callInformation,
+		callAnswered,
+		incomingCall: incoming,
+		outgoingCall: outgoing,
+		ringing: isRinging,
+	} = useSelector((state: ReduxState) => state.call);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -29,6 +52,135 @@ const Index = () => {
 		return () => clearInterval(interval);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
+
+	//* Checking user online or busy with another call
+	useEffect(() => {
+		const listener = ({
+			caller,
+			participants,
+			callInfo,
+		}: IncomingCallInfoType) => {
+			// console.log(incoming, outgoing, callAnswered);
+			const receiver = participants?.find(
+				(p: UserInterface) => p._id === user?._id
+			);
+			if (receiver) {
+				if (incoming || outgoing || callAnswered) {
+					if (!callInfo.isGroupCall) {
+						// console.log("Line busy sent");
+						socket.emit("lineBusy", { receiver, caller });
+					}
+				} else if (!incoming && !outgoing && !callAnswered) {
+					// console.log("incoming call....");
+					dispatch(incomingCall({ caller, participants, callInfo }));
+					socket.emit("receiveSignal", receiver);
+				}
+			}
+		};
+
+		socket.on("callSignal", listener);
+
+		return () => {
+			socket.off("callSignal", listener);
+		};
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [callAnswered, incoming, outgoing, user]);
+
+	//* Receive call signal and deliver to user (Ringing...)
+	useEffect(() => {
+		const listener = (receiver: UserInterface) => {
+			// console.log(receiver);
+			const hasReceiver = callInformation?.participants?.find(
+				(p: UserInterface) => p._id === receiver?._id
+			);
+			// console.log(callInformation);
+			if (hasReceiver && callInformation?.caller?._id === user?._id) {
+				// console.log("Ringing....");
+				dispatch(ringing());
+			}
+		};
+
+		socket.on("receiveSignal", listener);
+
+		return () => {
+			socket.off("receiveSignal", listener);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [callInformation]);
+
+	//* Line busy receiving
+	useEffect(() => {
+		let interval: ReturnType<typeof setInterval>;
+		const listener = ({ receiver, caller }: Partial<IncomingCallInfoType>) => {
+			const busyReceiver = callInformation?.participants?.find(
+				(p: UserInterface) => p._id === receiver?._id
+			);
+			if (busyReceiver && callInformation?.caller?._id === caller?._id) {
+				// console.log("Line busy received....");
+				dispatch(lineBusy());
+
+				interval = setInterval(() => {
+					dispatch(callEnd());
+				}, 3000);
+			}
+		};
+
+		socket.on("lineBusy", listener);
+
+		return () => {
+			socket.off("lineBusy", listener);
+			clearInterval(interval);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [callInformation]);
+
+	//* Receive Call Answered
+	useEffect(() => {
+		const listener = ({ caller, receiver }: Partial<IncomingCallInfoType>) => {
+			const hasReceiver = callInformation?.participants?.find(
+				(p: UserInterface) => p._id === receiver?._id
+			);
+			if (hasReceiver && caller?._id === user?._id) {
+				// console.log("Call Answered");
+				dispatch(setCallAnswered());
+			}
+		};
+
+		socket.on("callAnswered", listener);
+
+		return () => {
+			socket.off("callAnswered", listener);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [callInformation]);
+
+	//* Call end receive
+	useEffect(() => {
+		const listener = (hangupUser: UserInterface) => {
+			const endedUser = callInformation?.participants?.find(
+				(p: UserInterface) => p._id === hangupUser?._id
+			);
+			if (endedUser) {
+				if (callInformation?.callInfo.isGroupCall) {
+					if (callInformation.caller._id === endedUser._id) {
+						// console.log("Call ended");
+						dispatch(callEnd());
+					}
+				} else {
+					// console.log("Call ended");
+					dispatch(callEnd());
+				}
+			}
+		};
+
+		socket.on("callEnd", listener);
+
+		return () => {
+			socket.off("callEnd", listener);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [callInformation]);
 
 	return (
 		// theme color here below
@@ -53,8 +205,22 @@ const Index = () => {
 			<div
 				className={`lg:w-[calc(100%_-_390px)] md:w-[calc(100%_-_290px)] ${
 					match?.params ? "sm:block w-full" : "sm:hidden"
-				}`}
+				} relative`}
 			>
+				{outgoing && !callAnswered && <OutgoingCall />}
+				{outgoing && !isRinging && !callAnswered && (
+					<audio autoPlay src={waiting} loop></audio>
+				)}
+				{outgoing && isRinging && !callAnswered && (
+					<audio autoPlay src={dialTone} loop></audio>
+				)}
+
+				{incoming && !callAnswered && (
+					<audio autoPlay src={incomingCallRing} loop></audio>
+				)}
+
+				{incoming && !callAnswered && <IncomingCall />}
+				{outgoing ? <MeetPage /> : incoming && callAnswered && <MeetPage />}
 				<Outlet />
 			</div>
 		</div>

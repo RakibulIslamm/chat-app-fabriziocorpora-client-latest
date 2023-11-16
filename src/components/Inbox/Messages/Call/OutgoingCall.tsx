@@ -7,6 +7,8 @@ import useColorScheme from "../../../../Hooks/useColorScheme";
 import { socket } from "../../../../utils/socket";
 import { callEnd } from "../../../../lib/redux/slices/call/callSlice";
 import { MdCallEnd } from "react-icons/md";
+import { UserInterface } from "../../../../interfaces/user";
+import { getRandomColor } from "../../../../utils/randomColor";
 
 const OutgoingCall = () => {
 	const {
@@ -14,11 +16,15 @@ const OutgoingCall = () => {
 		lineBusy: busy,
 		ringing: isRinging,
 	} = useSelector((state: ReduxState) => state.call);
+	const { user } = useSelector((state: ReduxState) => state.user);
+	const receiver = callInformation?.participants?.find(
+		(p: UserInterface) => p._id !== callInformation.caller._id
+	);
 	const { secondary, textColor } = useColorScheme();
 	const dispatch = useDispatch();
 
 	const handleCallEnd = () => {
-		socket.emit("callEnd", callInformation);
+		socket.emit("callEnd", user);
 		dispatch(callEnd());
 	};
 
@@ -42,17 +48,25 @@ const OutgoingCall = () => {
 				<div className="flex flex-col items-center gap-2">
 					<div
 						style={{
-							background: callInformation?.receiver?.color || "pink",
+							background: `${
+								callInformation?.callInfo.isGroupCall
+									? getRandomColor()
+									: receiver?.color || "pink"
+							}`,
 							color: textColor,
 						}}
 						className="w-[115px] h-[115px] rounded-full flex justify-center items-center relative"
 					>
 						<p className="text-[70px] font-bold text-white uppercase">
-							{callInformation?.receiver?.name[0]}
+							{callInformation?.callInfo.isGroupCall
+								? callInformation?.callInfo?.groupName?.[0]
+								: receiver?.name[0]}
 						</p>
 					</div>
 					<p className="text-xl font-semibold">
-						{callInformation?.receiver?.name}
+						{callInformation?.callInfo.isGroupCall
+							? callInformation?.callInfo?.groupName
+							: receiver?.name}
 					</p>
 				</div>
 				{!busy && (
