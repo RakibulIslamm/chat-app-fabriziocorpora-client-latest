@@ -67,11 +67,42 @@ export const messageApi = apiSlice.injectEndpoints({
 		}),
 
 		deleteAllMessage: builder.mutation({
-			query: (id) => ({
-				url: `/messages/delete-all-message/${id}`,
+			query: ({ conversationId }) => ({
+				url: `/messages/delete-all-message/${conversationId}`,
 				method: "DELETE",
 			}),
-			invalidatesTags: ["messages", "moreMessages"],
+			// invalidatesTags: ["messages", "moreMessages"],
+			async onQueryStarted(
+				{ conversationId, userId },
+				{ dispatch, queryFulfilled }
+			) {
+				// console.log(data);
+				const patchResult = dispatch(
+					messageApi.util.updateQueryData(
+						"getMessages",
+						{ conversationId: conversationId, userId },
+						(draft) => {
+							draft.data = [];
+						}
+					)
+				);
+				const patchResult2 = dispatch(
+					messageApi.util.updateQueryData(
+						"getMoreMessages",
+						{ conversationId, limit: 0, skip: 0 },
+						(draft) => {
+							draft.data = [];
+						}
+					)
+				);
+				try {
+					await queryFulfilled;
+				} catch (err) {
+					patchResult.undo();
+					patchResult2.undo();
+					toast.error("Something went wrong!");
+				}
+			},
 		}),
 
 		getMessages: builder.query({

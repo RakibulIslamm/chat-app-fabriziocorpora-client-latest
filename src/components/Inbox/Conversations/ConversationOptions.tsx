@@ -58,7 +58,10 @@ const ConversationOptions = ({
 				file: false,
 				timestamp: Date.now(),
 			};
-			const result = await deleteAllMessage(id);
+			const result = await deleteAllMessage({
+				conversationId: id,
+				userId: user?._id,
+			});
 			if ("data" in result && result.data.data.deletedCount > 0) {
 				await updateConversation({ messageData: conversationData, id: id });
 			}
