@@ -40,6 +40,7 @@ import { IncomingCallInfoType } from "../../../interfaces/callInfo";
 import {
 	incomingCall,
 	setCallAnswered,
+	setCurrentGroupCall,
 } from "../../../lib/redux/slices/call/callSlice";
 
 const Messages = () => {
@@ -48,8 +49,6 @@ const Messages = () => {
 	const [forwardMessage, setForwardMessage] = useState<MessageInterface | null>(
 		null
 	);
-	const [currentGroupCall, setCurrentGroupCall] =
-		useState<Partial<IncomingCallInfoType> | null>(null);
 	// const [skip, setSkip] = useState<number>(1);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [hasMore, setHasMore] = useState<boolean>(true);
@@ -57,6 +56,9 @@ const Messages = () => {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 
 	const { user } = useSelector((state: ReduxState) => state.user);
+	const { currentGroupCall, minimize } = useSelector(
+		(state: ReduxState) => state.call
+	);
 	const { groupMembers, addMembers } = useSelector(
 		(state: ReduxState) => state.common
 	);
@@ -105,29 +107,33 @@ const Messages = () => {
 	}, [data]);
 
 	useEffect(() => {
-		setCurrentGroupCall(null);
-		const listener = (callInformation: Partial<IncomingCallInfoType>) => {
-			if (callInformation.callInfo?.room === id) {
-				setCurrentGroupCall(callInformation);
+		dispatch(setCurrentGroupCall(null));
+		const listener = (data: Partial<IncomingCallInfoType>) => {
+			if (data.callInfo?.room === id) {
+				dispatch(setCurrentGroupCall(data));
 			}
 		};
+
 		socket.on("group-call", listener);
 
 		return () => {
 			socket.off("group-call", listener);
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [id]);
 
 	useEffect(() => {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const listener = (_hangupUser: UserInterface) => {
-			setCurrentGroupCall(null);
+		const listener = (_user: UserInterface) => {
+			dispatch(setCurrentGroupCall(null));
 		};
 		socket.on("callEnd", listener);
+
 		return () => {
 			socket.off("callEnd", listener);
 		};
-	}, []);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id]);
 
 	const fetchMoreData = () => {
 		if (moreLoading || isFetching) {
@@ -310,7 +316,7 @@ const Messages = () => {
 								}
 							>
 								<span id="anchor" ref={lastMessageRef}></span>
-								{currentGroupCall?.callInfo?.isGroupCall && (
+								{currentGroupCall?.callInfo?.isGroupCall && !minimize && (
 									<div className="w-full flex justify-center">
 										<button
 											style={{ background: secondary, color: textColor }}

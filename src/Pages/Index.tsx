@@ -23,6 +23,7 @@ import MeetPage from "../components/Inbox/Messages/Call/jitsi/MeetPage";
 import dialTone from "../audio/dial_tone.mp3";
 import waiting from "../audio/waiting.mp3";
 import incomingCallRing from "../audio/ringing.mp3";
+import lineBusyTone from "../audio/line_busy.mp3";
 
 // type Props = {};
 
@@ -42,6 +43,8 @@ const Index = () => {
 		incomingCall: incoming,
 		outgoingCall: outgoing,
 		ringing: isRinging,
+		lineBusy: busy,
+		currentGroupCall,
 	} = useSelector((state: ReduxState) => state.call);
 
 	useEffect(() => {
@@ -122,7 +125,7 @@ const Index = () => {
 
 				interval = setInterval(() => {
 					dispatch(callEnd());
-				}, 3000);
+				}, 4000);
 			}
 		};
 
@@ -162,8 +165,11 @@ const Index = () => {
 				(p: UserInterface) => p._id === hangupUser?._id
 			);
 			if (endedUser) {
-				if (callInformation?.callInfo.isGroupCall) {
-					if (callInformation.caller._id === endedUser._id) {
+				if (
+					callInformation?.callInfo.isGroupCall ||
+					currentGroupCall?.callInfo?.isGroupCall
+				) {
+					if (callInformation?.caller?._id === endedUser?._id) {
 						// console.log("Call ended");
 						dispatch(callEnd());
 					}
@@ -208,7 +214,7 @@ const Index = () => {
 				} relative`}
 			>
 				{outgoing && !callAnswered && <OutgoingCall />}
-				{outgoing && !isRinging && !callAnswered && (
+				{outgoing && !isRinging && !callAnswered && !busy && (
 					<audio autoPlay src={waiting} loop></audio>
 				)}
 				{outgoing && isRinging && !callAnswered && (
@@ -219,7 +225,19 @@ const Index = () => {
 					<audio autoPlay src={incomingCallRing} loop></audio>
 				)}
 
-				{incoming && !callAnswered && <IncomingCall />}
+				{outgoing && busy && !callAnswered && (
+					<audio autoPlay src={lineBusyTone} loop></audio>
+				)}
+
+				<div
+					className={`absolute z-50 left-1/2 transform -translate-x-1/2 ${
+						incoming && !callAnswered
+							? "visible top-2 opacity-100 transition-all ease-in-out"
+							: "invisible -top-10 opacity-0"
+					}`}
+				>
+					<IncomingCall />
+				</div>
 				{outgoing ? <MeetPage /> : incoming && callAnswered && <MeetPage />}
 				<Outlet />
 			</div>

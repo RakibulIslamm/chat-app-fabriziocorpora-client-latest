@@ -12,9 +12,12 @@ import { UserInterface } from "../../../interfaces/user";
 import useColorScheme from "../../../Hooks/useColorScheme";
 import tinycolor from "tinycolor2";
 import { PiVideoCamera } from "react-icons/pi";
-import { MdOutlineCall } from "react-icons/md";
+import { MdCall, MdOutlineCall } from "react-icons/md";
 import { CallInfoType } from "../../../interfaces/callInfo";
-import { outgoingCall } from "../../../lib/redux/slices/call/callSlice";
+import {
+	outgoingCall,
+	setMinimize,
+} from "../../../lib/redux/slices/call/callSlice";
 
 const MessageHeader = () => {
 	const navigate = useNavigate();
@@ -22,6 +25,13 @@ const MessageHeader = () => {
 		(state: ReduxState) => state.common
 	);
 	const { user } = useSelector((state: ReduxState) => state.user);
+	const {
+		minimize,
+		incomingCall: incoming,
+		outgoingCall: outgoing,
+		callAnswered,
+		callInformation,
+	} = useSelector((state: ReduxState) => state.call);
 	const { id } = useParams();
 	const dispatch = useDispatch();
 	const { textColor, primary, secondary } = useColorScheme();
@@ -42,9 +52,20 @@ const MessageHeader = () => {
 		: null;
 
 	// const { call } = useCalling();
+	const callParticipantName =
+		callInformation && callInformation?.callInfo.isGroupCall
+			? callInformation.callInfo.groupName
+			: callInformation?.participants.find(
+					(p: UserInterface) => p._id !== user?._id
+			  )?.name;
 
 	//* Make a new call
 	const handleCall = (callType: string) => {
+		if (outgoing || incoming) {
+			alert("Currently running another call");
+			return;
+		}
+
 		const callInfo: CallInfoType = {
 			callType: (callType as "audio") || "video",
 			isGroupCall: conversation?.isGroup,
@@ -136,6 +157,18 @@ const MessageHeader = () => {
 					</div>
 				}
 			</div>
+			{(incoming || outgoing) && minimize && callAnswered && (
+				<button
+					className="absolute -bottom-12 left-0 z-10 hidden sm:block bg-green-500 w-full h-12 text-white"
+					onClick={() => dispatch(setMinimize(false))}
+				>
+					<span className="absolute top-0 left-0 w-full h-full bg-green-700 animate-pulse"></span>
+					<span className="relative z-50 flex items-center justify-center gap-2">
+						<MdCall className="text-xl" />
+						<span>{callParticipantName}</span>
+					</span>
+				</button>
+			)}
 		</div>
 	);
 };

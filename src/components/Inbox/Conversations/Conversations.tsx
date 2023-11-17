@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import { ReduxState, useDispatch, useSelector } from "../../../lib/redux/store";
 import Conversation from "./Conversation";
 import ConversationHeader from "./Header";
@@ -22,6 +23,10 @@ import { ConversationInterface } from "../../../interfaces/conversation";
 import { useRef, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { signal, effect } from "@preact/signals";
+import { MdCall } from "react-icons/md";
+import { setMinimize } from "../../../lib/redux/slices/call/callSlice";
+import { UserInterface } from "../../../interfaces/user";
+import { useNavigate } from "react-router-dom";
 
 const Conversations = () => {
 	const [searchText, setSearchText] = useState<string>("");
@@ -32,7 +37,22 @@ const Conversations = () => {
 		(state: ReduxState) => state.common
 	);
 	const { user } = useSelector((state: ReduxState) => state.user);
+	const {
+		minimize,
+		incomingCall,
+		outgoingCall,
+		callAnswered,
+		callInformation,
+	} = useSelector((state: ReduxState) => state.call);
+	const callParticipantName =
+		callInformation && callInformation?.callInfo.isGroupCall
+			? callInformation.callInfo.groupName
+			: callInformation?.participants.find(
+					(p: UserInterface) => p._id !== user?._id
+			  )?.name;
+
 	const dispatch = useDispatch();
+	const navigate = useNavigate();
 	const { primary, textColor, main } = useColorScheme();
 	const bg = tinycolor(primary).setAlpha(0.7).toRgbString();
 	const border = tinycolor(main).setAlpha(0.2).toRgbString();
@@ -109,9 +129,25 @@ const Conversations = () => {
 				<div
 					className={`pb-4 space-y-1 ${
 						menuOpen ? "overflow-hidden" : "overflow-y-auto"
-					} w-full h-[calc(100%_-_75px)] scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200 scrollbar-thumb-rounded-full scrollbar-track-rounded-full relative`}
+					} w-full h-[calc(100%_-_75px)] scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200 relative`}
 					id="conversationContainer"
 				>
+					{(incomingCall || outgoingCall) && minimize && callAnswered && (
+						<button
+							className="sticky top-0 left-0 z-10 bg-green-500 w-full h-16 text-white"
+							onClick={() => {
+								dispatch(setMinimize(false));
+								navigate(`messages/${callInformation?.callInfo.room}`);
+							}}
+						>
+							<span className="absolute top-0 left-0 w-full h-full bg-green-700 animate-pulse"></span>
+
+							<span className="relative z-50 flex items-center justify-center gap-2">
+								<MdCall />
+								<span>{callParticipantName}</span>
+							</span>
+						</button>
+					)}
 					<InfiniteScroll
 						dataLength={data?.data?.length || 8}
 						next={fetchMoreData}
@@ -174,7 +210,7 @@ const Conversations = () => {
 									background: tinycolor(main).setAlpha(0.7).toRgbString(),
 								}}
 								onClick={() => dispatch(selectNewChatOption(true))}
-								className="p-4 text-xl rounded-md text-white"
+								className="p-4 text-xl rounded-md text-white backdrop-blur"
 							>
 								<BsFillChatRightDotsFill />
 							</button>
@@ -185,7 +221,7 @@ const Conversations = () => {
 									background: tinycolor(main).setAlpha(0.7).toRgbString(),
 								}}
 								onClick={() => dispatch(selectNewChatOption(false))}
-								className="p-4 text-xl rounded-md text-white"
+								className="p-4 text-xl rounded-md text-white backdrop-blur"
 							>
 								<AiOutlineCloseCircle />
 							</button>

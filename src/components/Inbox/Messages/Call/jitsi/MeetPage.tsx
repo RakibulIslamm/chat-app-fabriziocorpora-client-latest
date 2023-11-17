@@ -14,7 +14,10 @@ import {
 	overwriteOptionForCall,
 	overwriteOptionForGroupCall,
 } from "./options";
-import { callEnd } from "../../../../../lib/redux/slices/call/callSlice";
+import {
+	callEnd,
+	setMinimize,
+} from "../../../../../lib/redux/slices/call/callSlice";
 import { meetUrl } from "../../../../../utils/serverUrl";
 import useColorScheme from "../../../../../Hooks/useColorScheme";
 import { v4 as uuid } from "uuid";
@@ -22,6 +25,7 @@ import { useSendMessageMutation } from "../../../../../lib/redux/slices/message/
 import { useUpdateConversationMutation } from "../../../../../lib/redux/slices/conversation/conversationApi";
 import { socket } from "../../../../../utils/socket";
 import { UserInterface } from "../../../../../interfaces/user";
+import { FiArrowLeft } from "react-icons/fi";
 
 const MeetPage: React.FC = () => {
 	const [callTime, setCallTime] = useState<{ h: number; m: number; s: number }>(
@@ -31,7 +35,7 @@ const MeetPage: React.FC = () => {
 	const navigate = useNavigate();
 	// const { id } = useParams();
 	const { user } = useSelector((state: ReduxState) => state.user);
-	const { callInformation, callAnswered } = useSelector(
+	const { callInformation, callAnswered, minimize } = useSelector(
 		(state: ReduxState) => state.call
 	);
 	const dispatch = useDispatch();
@@ -41,6 +45,9 @@ const MeetPage: React.FC = () => {
 	const IntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
 		undefined
 	);
+	const groupCallingIntervalRef = useRef<
+		ReturnType<typeof setInterval> | undefined
+	>(undefined);
 
 	useEffect(() => {
 		let interval;
@@ -84,6 +91,7 @@ const MeetPage: React.FC = () => {
 				"Are you sure! you want to close this meeting?"
 			);
 			if (confirm) {
+				clearInterval(groupCallingIntervalRef.current);
 				socket.emit("callEnd", user);
 				return;
 			} else return;
@@ -92,7 +100,7 @@ const MeetPage: React.FC = () => {
 	};
 
 	useEffect(() => {
-		let interval: ReturnType<typeof setInterval>;
+		let interval;
 		if (
 			callInformation?.caller._id === user?._id &&
 			callInformation?.callInfo.isGroupCall
@@ -101,8 +109,9 @@ const MeetPage: React.FC = () => {
 				socket.emit("group-call", callInformation);
 			}, 1000);
 		}
+		groupCallingIntervalRef.current = interval;
 		return () => {
-			clearInterval(interval);
+			clearInterval(groupCallingIntervalRef.current);
 		};
 	}, [user, callInformation]);
 
@@ -215,7 +224,7 @@ const MeetPage: React.FC = () => {
 	return (
 		<div
 			className={`absolute w-full h-full bg-black bg-opacity-50 backdrop-blur flex justify-center items-center z-50 ${
-				!callAnswered ? "invisible" : "visible"
+				!callAnswered || minimize ? "invisible" : "visible"
 			}`}
 		>
 			<div className="w-full h-screen">
@@ -254,6 +263,12 @@ const MeetPage: React.FC = () => {
 					}}
 				/>
 			</div>
+			<button
+				className=" absolute left-2 top-2 text-white text-3xl p-5"
+				onClick={() => dispatch(setMinimize(true))}
+			>
+				<FiArrowLeft />
+			</button>
 		</div>
 	);
 };

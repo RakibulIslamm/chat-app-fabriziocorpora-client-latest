@@ -22,6 +22,7 @@ type callSliceType = {
 	lineBusy: boolean;
 	callAnswered: boolean;
 	minimize: boolean;
+	currentGroupCall: IncomingCallInfoType | null;
 	callInformation: IncomingCallInfoType | null;
 };
 
@@ -33,6 +34,7 @@ const initialState: callSliceType = {
 	callAnswered: false,
 	minimize: false,
 	callInformation: null,
+	currentGroupCall: null,
 };
 
 const callSlice = createSlice({
@@ -66,6 +68,12 @@ const callSlice = createSlice({
 		lineBusy: (state) => {
 			state.lineBusy = true;
 		},
+		setMinimize: (state, action) => {
+			state.minimize = action.payload;
+		},
+		setCurrentGroupCall: (state, action) => {
+			state.currentGroupCall = action.payload;
+		},
 		callEnd: (state) => {
 			state.lineBusy = false;
 			state.ringing = false;
@@ -74,6 +82,7 @@ const callSlice = createSlice({
 			state.minimize = false;
 			state.outgoingCall = false;
 			state.incomingCall = false;
+			state.currentGroupCall = null;
 		},
 	},
 });
@@ -87,4 +96,6 @@ export const {
 	ringing,
 	setCallInfo,
 	setCallAnswered,
+	setMinimize,
+	setCurrentGroupCall,
 } = callSlice.actions;

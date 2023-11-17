@@ -25,7 +25,7 @@ const OutgoingCall = () => {
 
 	const handleCallEnd = () => {
 		socket.emit("callEnd", user);
-		dispatch(callEnd());
+		// dispatch(callEnd());
 	};
 
 	return (

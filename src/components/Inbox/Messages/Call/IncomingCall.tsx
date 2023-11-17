@@ -10,13 +10,12 @@ import {
 	callEnd,
 	setCallAnswered,
 } from "../../../../lib/redux/slices/call/callSlice";
+import tinycolor from "tinycolor2";
 
 const IncomingCall = () => {
-	const { callInformation, lineBusy: busy } = useSelector(
-		(state: ReduxState) => state.call
-	);
+	const { callInformation } = useSelector((state: ReduxState) => state.call);
 	const { user } = useSelector((state: ReduxState) => state.user);
-	const { secondary, textColor } = useColorScheme();
+	const { secondary, textColor, main } = useColorScheme();
 	const dispatch = useDispatch();
 
 	const handleCallAnswered = () => {
@@ -33,55 +32,45 @@ const IncomingCall = () => {
 	};
 
 	return (
-		<div className="absolute w-full h-full bg-black bg-opacity-50 backdrop-blur flex justify-center items-center z-50">
-			<div
-				style={{ background: secondary, color: textColor }}
-				className="px-4 py-6 sm:py-8 shadow-xl rounded-lg w-[500px] h-[400px] sm:w-full sm:h-full flex flex-col justify-between items-center"
-			>
-				<div className="text-center space-y-2">
-					<p className="text-xl">
-						Incoming{" "}
-						<span className="capitalize">
-							{callInformation?.callInfo.callType}
-						</span>{" "}
-						Call
-					</p>
-				</div>
-				<div className="flex flex-col items-center gap-2">
-					<div
-						style={{
-							background: callInformation?.caller?.color || "pink",
-							color: textColor,
-						}}
-						className="w-[115px] h-[115px] rounded-full flex justify-center items-center relative"
-					>
-						<p className="text-[70px] font-bold text-white uppercase">
-							{callInformation?.caller?.name[0]}
-						</p>
-					</div>
-					<p className="text-xl font-semibold">
-						{callInformation?.caller?.name}
-					</p>
-				</div>
-				<div className="flex items-center gap-6">
-					<button
-						title="Accept"
-						className="p-4 rounded-full bg-green-500 text-white text-2xl"
-						onClick={handleCallAnswered}
-					>
-						<MdCall />
-					</button>
-					{!busy && (
-						<div className="flex items-center gap-3">
-							<button
-								className="p-4 rounded-full bg-red-500 text-white text-2xl"
-								onClick={handleCallEnd}
-							>
-								<MdCallEnd />
-							</button>
-						</div>
-					)}
-				</div>
+		<div
+			style={{
+				background: secondary,
+				color: textColor,
+				border: `1px solid ${tinycolor(main).setAlpha(0.2).toRgbString()}`,
+			}}
+			className="px-10 py-8 rounded-md shadow-xl"
+		>
+			<div>
+				<p className="font-light text-xs">
+					Incoming{" "}
+					<span className="capitalize">
+						{callInformation?.callInfo.callType}
+					</span>{" "}
+					Call
+				</p>
+				<p className="text-lg">
+					{callInformation?.callInfo.isGroupCall
+						? callInformation?.callInfo?.groupName
+						: callInformation?.caller?.name || "Anonymous"}
+				</p>
+			</div>
+
+			<div className="flex items-center gap-3 mt-3">
+				<button
+					title="Accept"
+					className="bg-green-500 text-white px-8 py-2 rounded flex items-center gap-2"
+					onClick={handleCallAnswered}
+				>
+					<MdCall />
+					Accept
+				</button>
+				<button
+					className="bg-red-500 text-white px-8 py-2 rounded flex items-center gap-2"
+					onClick={handleCallEnd}
+				>
+					<MdCallEnd />
+					Decline
+				</button>
 			</div>
 		</div>
 	);

@@ -5,7 +5,7 @@ import { RiReplyFill } from "react-icons/ri";
 import useColorScheme from "../../../Hooks/useColorScheme";
 import tinycolor from "tinycolor2";
 import { useSelector } from "react-redux";
-import { ReduxState } from "../../../lib/redux/store";
+import { ReduxState, useDispatch } from "../../../lib/redux/store";
 import { MessageInterface } from "../../../interfaces/message";
 import { formateDate } from "../../../utils/formateDate";
 import { useGetSingleConversationQuery } from "../../../lib/redux/slices/conversation/conversationApi";
@@ -20,6 +20,9 @@ import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import { AiOutlineDownload, AiOutlineFile } from "react-icons/ai";
 import { serverUrl } from "../../../utils/serverUrl";
 import { MdCall, MdCallMade, MdCallReceived, MdVideocam } from "react-icons/md";
+import { CallInfoType } from "../../../interfaces/callInfo";
+import { outgoingCall } from "../../../lib/redux/slices/call/callSlice";
+import { ConversationInterface } from "../../../interfaces/conversation";
 
 type Props = {
 	message: MessageInterface;
@@ -41,6 +44,9 @@ const Message = ({
 
 	const { user } = useSelector((state: ReduxState) => state.user);
 	const { fontSize } = useSelector((state: ReduxState) => state.theme);
+	const { incomingCall: incoming, outgoingCall: outgoing } = useSelector(
+		(state: ReduxState) => state.call
+	);
 	const { main, secondary, textColor } = useColorScheme();
 	const replyBg = tinycolor(main).setAlpha(0.4).toRgbString();
 
@@ -49,7 +55,9 @@ const Message = ({
 
 	const { id } = useParams();
 	const { data } = useGetSingleConversationQuery(id);
-	const { isGroup } = data?.data || {};
+	const { isGroup, participants, groupName }: ConversationInterface =
+		data?.data || {};
+	const dispatch = useDispatch();
 
 	useEffect(() => {
 		if (user?._id !== message?.sender?.id && message.status !== "seen") {
@@ -94,6 +102,30 @@ const Message = ({
 		} finally {
 			setDownloading(false);
 		}
+	};
+
+	//* Make a new call
+	const handleCall = () => {
+		if (outgoing || incoming) {
+			alert("Currently running another call");
+			return;
+		}
+
+		const callInfo: CallInfoType = {
+			callType: (message?.callInfo?.callType as "audio") || "video",
+			isGroupCall: message?.callInfo?.isGroupCall as boolean,
+			room: message.conversationId,
+			groupName: groupName || "",
+		};
+
+		dispatch(
+			outgoingCall({
+				caller: user,
+				callInfo: callInfo,
+				participants: participants,
+			})
+		);
+		// call(callInfo, participant);
 	};
 
 	useEffect(() => {
@@ -146,7 +178,8 @@ const Message = ({
 						) : (
 							<div>
 								{message.isCall && (
-									<div
+									<button
+										onClick={handleCall}
 										style={{
 											background: `${me ? main : secondary}`,
 											fontSize: fontSize,
@@ -157,7 +190,11 @@ const Message = ({
 												: "rounded-bl-none sm:rounded-bl-none dark:text-gray-100"
 										} shadow-xl relative font-normal break-words message space-y-2`}
 									>
-										<div className="flex items-center gap-8 sm:gap-4">
+										<div
+											className={`flex items-center ${
+												me ? "flex-row-reverse" : ""
+											} gap-8 sm:gap-4`}
+										>
 											<div className="space-y-1">
 												<p>
 													{message.sender.id === user?._id
@@ -195,19 +232,25 @@ const Message = ({
 																me ? "text-white" : "text-red-500"
 															}`}
 														>
-															Missed call
+															{me ? "Canceled call" : "Missed call"}
 														</p>
 													)}
 												</div>
 											</div>
 											<div className="text-2xl">
 												{message.callInfo?.callType === "video" && (
-													<MdVideocam />
+													<button className="p-2 rounded-full hover:bg-black hover:bg-opacity-20 transition-all ease-in-out">
+														<MdVideocam />
+													</button>
 												)}
-												{message.callInfo?.callType === "audio" && <MdCall />}
+												{message.callInfo?.callType === "audio" && (
+													<button className="p-2 rounded-full hover:bg-black hover:bg-opacity-20 transition-all ease-in-out">
+														<MdCall />
+													</button>
+												)}
 											</div>
 										</div>
-									</div>
+									</button>
 								)}
 								{message?.replyTo &&
 									(message.replyTo.img ? (

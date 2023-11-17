@@ -62,6 +62,18 @@ function App() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [storageColor, fontSize]);
 
+	useEffect(() => {
+		if (!("Notification" in window)) {
+			console.log("Your browser does not support notification");
+		} else {
+			Notification.requestPermission();
+		}
+	}, []);
+
+	setInterval(() => {
+		// new Notification("Demo Notification");
+	}, 10000);
+
 	const isAuthListened = useListenAuth();
 
 	const { primary, textColor } = useColorScheme();
