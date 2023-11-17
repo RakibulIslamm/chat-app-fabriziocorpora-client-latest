@@ -192,9 +192,18 @@ const Index = () => {
 		// theme color here below
 		<div
 			style={{ background: `${primary}` }}
-			className={`w-full h-full flex overflow-hidden`}
+			className={`w-full h-full flex overflow-hidden relative`}
 		>
-			{/* Theme color change here below */}
+			<div
+				className={`absolute z-50 left-1/2 transform -translate-x-1/2 ${
+					incoming && !callAnswered
+						? "visible top-2 opacity-100 transition-all ease-in-out"
+						: "invisible -top-10 opacity-0"
+				} sm:px-2 sm:w-full`}
+			>
+				<IncomingCall />
+			</div>
+
 			<div
 				style={{ backgroundColor: bg }}
 				className={`lg:w-[390px] md:w-[290px] sm:w-full ${
@@ -228,16 +237,6 @@ const Index = () => {
 				{outgoing && busy && !callAnswered && (
 					<audio autoPlay src={lineBusyTone} loop></audio>
 				)}
-
-				<div
-					className={`absolute z-50 left-1/2 transform -translate-x-1/2 ${
-						incoming && !callAnswered
-							? "visible top-2 opacity-100 transition-all ease-in-out"
-							: "invisible -top-10 opacity-0"
-					}`}
-				>
-					<IncomingCall />
-				</div>
 				{outgoing ? <MeetPage /> : incoming && callAnswered && <MeetPage />}
 				<Outlet />
 			</div>
